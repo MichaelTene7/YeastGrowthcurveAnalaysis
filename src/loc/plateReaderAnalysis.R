@@ -3,11 +3,10 @@ library(gridExtra)
 library(growthcurver)
 
 # -- read the data --
-inData = mainData = read.csv("Data/PlateReader/second2490-3CompareClean.csv")
-inData = mainData = read.csv("Data/PlateReader/third2490-3CompareClean.csv")
-inData = mainData = read.csv("Data/PlateReader/lowQualityYeastCompare9-26Clean.csv")
-
-
+inData = mainData = read.csv("Data/09-20-strainPhenotyping.csv")
+inData = mainData = read.csv("Data/09-22-strainPhenotyping.csv")
+inData = mainData = read.csv("Data/10-12-strainPhenotyping.csv")
+inData = mainData = read.csv("Data/10-13-strainPhenotyping.csv")
 
 # -- clean the data -- #
 timeData = mainData[which(mainData[1] == "Time [s]"),]
@@ -82,12 +81,14 @@ names(cleanData) = wellNames
 # -- make plotting function ---
 
 combinedPlot = function(wells){
+  colorset = c("brown1", "blue", "chocolate1", "cadetblue")
   plot <- ggplot( aes(x=time), data = cleanData)
   for (i in 1:length(wells)) { 
     loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
     plot <- plot + eval(parse(text=loop_input))  
   }
   plot <- plot + guides( color = guide_legend(title = "",) )
+  plot = plot + scale_color_manual(values = colorset)
   plot
 }
 
@@ -120,6 +121,19 @@ csm2492plot = combinedPlot(wells2492csm)
 csm2493plot = combinedPlot(wells2493csm)
 grid.arrange(csm2490plot, csm2492plot, csm2491plot, csm2493plot, ncol = 2)
 
+wellsASMm = wellNames[grepl("As_1", wellNames) & grepl("Mm", wellNames)]
+wellsGluMm = wellNames[grepl("Glu_1", wellNames) & grepl("Mm", wellNames)]
+wellsSerMm = wellNames[grepl("Ser_1", wellNames) & grepl("Mm", wellNames)]
+wellsThrMm = wellNames[grepl("Thr_1", wellNames) & grepl("Mm", wellNames)]
+wellsASMmPLot = combinedPlot(wellsASMm)
+wellsGluMmPlot = combinedPlot(wellsGluMm)
+wellsSerMmPlot = combinedPlot(wellsSerMm)
+wellsThrMmPlot = combinedPlot(wellsThrMm)
+grid.arrange(wellsASMmPLot, wellsGluMmPlot, wellsSerMmPlot, wellsThrMmPlot, ncol = 2)
+
+
+combinedPlot(c("Glu_1_Mm_2490","Glu_5_Mm_2490"))
+
 
 #
 
@@ -131,6 +145,64 @@ write.csv(growthcurverOutput, "Output/GrowthCurves/yeastStrains.csv")
 
 
 
+# -- Plot the grwoth rates -- 
+
+growthcurverOutput = read.csv("Output/GrowthCurves/yeastStrains.csv")
+
+growthRates = growthcurverOutput$r
+names(growthRates) = growthcurverOutput$sample
+
+growthcurverOutputPlot = growthcurverOutput
+growthcurverOutputPlot$r[growthcurverOutputPlot$r >1] =NA
+growthcurverOutputPlot$strain = growthcurverOutputPlot$sample
+
+growthcurverOutputPlot$strain[grep("2490", growthcurverOutputPlot$sample)] = "2490"
+growthcurverOutputPlot$strain[grep("2491", growthcurverOutputPlot$sample)] = "2491"
+growthcurverOutputPlot$strain[grep("2492", growthcurverOutputPlot$sample)] = "2492"
+growthcurverOutputPlot$strain[grep("2493", growthcurverOutputPlot$sample)] = "2493"
+growthcurverOutputPlot$media = growthcurverOutputPlot$sample
+growthcurverOutputPlot$media[grep("As", growthcurverOutputPlot$sample)] = "As"
+growthcurverOutputPlot$media[grep("Glu", growthcurverOutputPlot$sample)] = "Glu"
+growthcurverOutputPlot$media[grep("Ser", growthcurverOutputPlot$sample)] = "Ser"
+growthcurverOutputPlot$media[grep("Thr", growthcurverOutputPlot$sample)] = "Thr"
+
+growthcurverOutputPlot$concentration = growthcurverOutputPlot$sample
+growthcurverOutputPlot$concentration[grep("_5", growthcurverOutputPlot$sample)] = "5%"
+growthcurverOutputPlot$concentration[grep("_1", growthcurverOutputPlot$sample)] = "1%"
+
+
+grep("Mm", growthcurverOutputPlot$sample)
+growthcurverOutputPlotTrimmed = growthcurverOutputPlot[grep("Mm", growthcurverOutputPlot$sample),]
+
+growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Ser_5", growthcurverOutputPlotTrimmed$sample),]
+growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Thr_5", growthcurverOutputPlotTrimmed$sample),]
+growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Glu_5", growthcurverOutputPlotTrimmed$sample),]
+growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("AS_1", growthcurverOutputPlotTrimmed$sample),]
+
+
+ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= r, colour=strain, label=concentration))+
+  geom_point()+
+  geom_text(hjust=0, vjust=0)
+# 
+ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= k, colour=media, label=concentration))+
+  geom_point()+
+  geom_text(hjust=0, vjust=0)
+
+#
+
+colorset = c("brown1", "blue", "chocolate1", "cadetblue")
+
+mediaK = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= k, colour=strain, label=concentration))+
+  geom_point()+
+  geom_text(hjust=0, vjust=0)+
+  scale_color_manual(values = colorset)
+
+mediaR = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= r, colour=strain, label=concentration))+
+  geom_point()+
+  geom_text(hjust=0, vjust=0)+
+  scale_color_manual(values = colorset)
+
+grid.arrange(mediaK, mediaR, ncol = 2)
 
 
 
@@ -140,58 +212,4 @@ write.csv(growthcurverOutput, "Output/GrowthCurves/yeastStrains.csv")
 
 
 
-
-
-
-
-
-
-
-
-# --------- old code ----------- #
-mainData = read.csv("Data/PlateReader/Intial2490-3CompareClean.csv")
-mainData[4,]
-
-mainData$Cycles...Well
-
-rownames(mainData) = mainData$Cycles...Well
-
-mainData[which(mainData[1] == "Mean"),]
-
-meanData = mainData[which(mainData[1] == "Mean"),]
-timeData = mainData[which(mainData[1] == "Time [s]"),]
-duplicated(timeData) # all time data is the same 
-timeData = timeData[1,]
-rownames(timeData)= "Time"
-timeData = timeData[,-1]
-
-mainData[(which(mainData[1] == "Mean")-3),1]
-rownames(meanData) = mainData[(which(mainData[1] == "Mean")-3),1]
-meanData = meanData[,-1]
-
-meanData = rbind(timeData, meanData)
-meanData2 = data.frame(t(meanData))
-
-plot(meanData2$Time, meanData2$A1)
-
-meanData3 = lapply(FUN = as.numeric, meanData2)
-meanData3= data.frame(meanData3)
-
-fields = names(meanData3)
-
-combinedPlot = function(wells){
-plot <- ggplot( aes(x=Time), data = meanData3)
-for (i in 2:length(wells)) { 
-  loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
-  plot <- plot + eval(parse(text=loop_input))  
-}
-plot <- plot + guides( color = guide_legend(title = "",) )
-plot
-}
-
-sevenAndEight = names(meanData3)[c(grep(7, names(meanData3)), grep(8, names(meanData3)))]
-combinedPlot(sevenAndEight)
-
-notSevenAndEight = names(meanData3)[-c(grep(7, names(meanData3)), grep(8, names(meanData3)),1)]
-combinedPlot(notSevenAndEight)
 
