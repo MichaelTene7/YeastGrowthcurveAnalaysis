@@ -1,49 +1,10 @@
 library(ggplot2)
 library(gridExtra)
 library(growthcurver)
+library(dplyr)
 
-# -- read the data --
-inData = mainData = read.csv("Data/09-20-strainPhenotyping.csv")
-inData = mainData = read.csv("Data/09-22-strainPhenotyping.csv")
-inData = mainData = read.csv("Data/10-12-strainPhenotyping.csv")
-inData = mainData = read.csv("Data/10-13-strainPhenotyping.csv")
+# -- well name conversion arguments -- 
 
-# -- clean the data -- #
-timeData = mainData[which(mainData[1] == "Time [s]"),]
-timeData = timeData[1,]
-rownames(timeData)= "time"
-timeData = timeData[,-1]
-
-meanData = mainData[which(mainData[1] == "Mean"),]
-rownames(meanData) = mainData[(which(mainData[1] == "Mean")-3),1]
-meanData = meanData[,-1]
-
-cleanData = rbind(timeData, meanData)
-cleanData = data.frame(t(cleanData))
-cleanData = lapply(FUN = as.numeric, cleanData)
-cleanData= data.frame(cleanData)
-
-wellNames = names(cleanData)
-wellNumbers = names(cleanData)
-
-# -- generate meaningful well names -- 
-
-# - conversion functions - 
-convertBoth = function(firstSet, secondSet){
-  wellNames = wellNumbers
-  for(i in 1:length(firstSet)){
-    conversionStep = firstSet[[i]]
-    message(paste("replacing", conversionStep[1], "with", conversionStep[2]))
-    wellNames[grep(conversionStep[1], wellNumbers)] = conversionStep[2]
-  }
-  for(i in 1:length(secondSet)){
-    conversionStep = secondSet[[i]]
-    message(paste("replacing", conversionStep[1], "with", conversionStep[2]))
-    wellNames[grep(conversionStep[1], wellNumbers)] = paste(wellNames[grep(conversionStep[1], wellNumbers)], conversionStep[2], sep="_")
-  }
-  wellNames
-}
-# - 
 rowMeanings = list(
   c("A","Mm_2490"),
   c("B", "Mm_2491"),
@@ -65,23 +26,105 @@ colMeanings = list(
   c("8", "Thr_5")
 )
 rowFirst = F
+numOfPlates = 2
+# ---- Clean the data  ---- 
 
-wellNames = wellNumbers
-
-if(rowFirst){
-  wellNames = convertBoth(rowMeanings, colMeanings)
-}else{
-  wellNames = convertBoth(colMeanings, rowMeanings)
+# - generate meaningful well names -  
+convertBoth = function(wellNumbers, rowFirst = F, rowMeaning = rowMeanings, colMeaning = colMeanings){
+  wellNames = wellNumbers
+  if(rowFirst){
+    firstSet = rowMeanings
+    secondSet = colMeanings
+  }else{
+    firstSet = colMeanings
+    secondSet = rowMeanings
+  }
+  
+  for(i in 1:length(firstSet)){
+    conversionStep = firstSet[[i]]
+    message(paste("replacing", conversionStep[1], "with", conversionStep[2]))
+    wellNames[grep(conversionStep[1], wellNumbers)] = conversionStep[2]
+  }
+  for(i in 1:length(secondSet)){
+    conversionStep = secondSet[[i]]
+    message(paste("replacing", conversionStep[1], "with", conversionStep[2]))
+    wellNames[grep(conversionStep[1], wellNumbers)] = paste(wellNames[grep(conversionStep[1], wellNumbers)], conversionStep[2], sep="_")
+  }
+  wellNames
 }
 
-wellNames
 
-names(cleanData) = wellNames
+# - get the means out - 
+dataCleaner = function(mainData, instance = NULL, addTime = F, rowFirst = F ){
+  # -- clean the data -- #
+  timeData = mainData[which(mainData[1] == "Time [s]"),]
+  timeData = timeData[1,]
+  rownames(timeData)= "time"
+  timeData = timeData[,-1]
+  
+  meanData = mainData[which(mainData[1] == "Mean"),]
+  rownames(meanData) = mainData[(which(mainData[1] == "Mean")-3),1]
+  rownames(meanData) = convertBoth(rownames(meanData), rowFirst)
+  rownames(meanData) = sapply(rownames(meanData) , paste, instance, sep="")
+
+  meanData = meanData[,-1]
+  #meanData = mutate_all(meanData, as.numeric)
+  
+  if(addTime){
+    cleanData = rbind(timeData, meanData)
+  }else{
+    cleanData = meanData
+  }
+  cleanData = data.frame(t(cleanData))
+  cleanData = lapply(FUN = as.numeric, cleanData)
+  cleanData= data.frame(cleanData)
+  
+  cleanData
+}
+
 
 # -- make plotting function ---
 
+colorset1 = c("brown1", "blue", "chocolate1", "deepskyblue")
+colorset2 = c("brown3", "blue3", "chocolate3", "deepskyblue3")
+colorset3 = c("brown4", "blue4", "chocolate4", "deepskyblue4")
+colorset4 = c("brown2", "blue2", "chocolate2", "deepskyblue2")
+
+colorset1 = c("brown1", "brown3", "brown4", "brown2")
+colorset2 = c("blue", "blue3", "blue4", "blue2")
+colorset3 = c("chocolate1", "chocolate3", "chocolate4", "chocolate2")
+colorset4 = c("deepskyblue", "deepskyblue3", "deepskyblue4", "deepskyblue2")
+
+colorsets = data.frame(colorset1, colorset2, colorset3, colorset4)
+colorset = unlist(colorsets[1:numOfPlates,])
+names(colorset) =NULL
+
+
+
 combinedPlot = function(wells){
-  colorset = c("brown1", "blue", "chocolate1", "cadetblue")
+  plot <- ggplot( aes(x=time), data = cleanData)
+  for (i in 1:length(wells)) { 
+    loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
+    plot <- plot + eval(parse(text=loop_input))  
+  }
+  plot <- plot + guides( color = guide_legend(title = "",) )
+  plot
+}
+
+combinedPlotColor = function(wells, colorsetNumber =3){
+  colorset1 = c("brown1", "blue", "chocolate1", "deepskyblue")
+  colorset2 = c("brown3", "blue3", "chocolate3", "deepskyblue3")
+  colorset3 = c("brown4", "blue4", "chocolate4", "deepskyblue4")
+  colorset4 = c("brown2", "blue2", "chocolate2", "deepskyblue2")
+  
+  colorset1 = c("brown1", "brown3", "brown4", "brown2")
+  colorset2 = c("blue", "blue3", "blue4", "blue2")
+  colorset3 = c("chocolate1", "chocolate3", "chocolate4", "chocolate2")
+  colorset4 = c("deepskyblue", "deepskyblue3", "deepskyblue4", "deepskyblue2")
+  
+  colorsets = data.frame(colorset1, colorset2, colorset3, colorset4)
+  colorset = unlist(colorsets[1:colorsetNumber,])
+  names(colorset) =NULL
   plot <- ggplot( aes(x=time), data = cleanData)
   for (i in 1:length(wells)) { 
     loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
@@ -89,8 +132,42 @@ combinedPlot = function(wells){
   }
   plot <- plot + guides( color = guide_legend(title = "",) )
   plot = plot + scale_color_manual(values = colorset)
+  plot = plot + ylim(0,1)
   plot
 }
+
+
+
+# -- read the data --
+#inData = mainData = read.csv("Data/Old/second2490-3CompareClean.csv")
+
+inData1 = read.csv("Data/09-22-strainPhenotyping.csv")
+
+inData2 = read.csv("Data/10-12-strainPhenotyping.csv")
+
+inData3 = read.csv("Data/10-13-strainPhenotyping.csv")
+
+
+
+means1 = dataCleaner(inData1, "α")
+mean1Extender = data.frame(matrix(nrow=44, ncol=64))
+colnames(mean1Extender) = colnames(means1)
+means1 = rbind(means1, mean1Extender)
+
+means2 = dataCleaner(inData2, "β")
+means3 = dataCleaner(inData3,"γ", addTime = T)
+
+
+cleanData = cbind(means3, means2, means1)
+numOfPlates = 3
+
+
+cleanData = cbind(means3, means2)
+numOfPlates = 2
+
+
+wellNames = names(cleanData)
+
 
 
 # -- plot the data -- 
@@ -125,11 +202,17 @@ wellsASMm = wellNames[grepl("As_1", wellNames) & grepl("Mm", wellNames)]
 wellsGluMm = wellNames[grepl("Glu_1", wellNames) & grepl("Mm", wellNames)]
 wellsSerMm = wellNames[grepl("Ser_1", wellNames) & grepl("Mm", wellNames)]
 wellsThrMm = wellNames[grepl("Thr_1", wellNames) & grepl("Mm", wellNames)]
-wellsASMmPLot = combinedPlot(wellsASMm)
-wellsGluMmPlot = combinedPlot(wellsGluMm)
-wellsSerMmPlot = combinedPlot(wellsSerMm)
-wellsThrMmPlot = combinedPlot(wellsThrMm)
-grid.arrange(wellsASMmPLot, wellsGluMmPlot, wellsSerMmPlot, wellsThrMmPlot, ncol = 2)
+wellsASMmPlot = combinedPlotColor(wellsASMm,numOfPlates)
+wellsGluMmPlot = combinedPlotColor(wellsGluMm,numOfPlates)
+wellsSerMmPlot = combinedPlotColor(wellsSerMm,numOfPlates)
+wellsThrMmPlot = combinedPlotColor(wellsThrMm,numOfPlates)
+grid.arrange(wellsASMmPlot, wellsGluMmPlot, wellsSerMmPlot, wellsThrMmPlot, ncol = 2)
+
+
+wellsASMm5 = wellNames[grepl("As_5", wellNames) & grepl("Mm", wellNames)]
+wellsASMm5Plot = combinedPlotColor(wellsASMm5,numOfPlates)
+grid.arrange(wellsASMm5Plot, wellsGluMmPlot, wellsSerMmPlot, wellsThrMmPlot, ncol = 2)
+grid.arrange(wellsASMmPlot, wellsASMm5Plot, ncol = 2)
 
 
 combinedPlot(c("Glu_1_Mm_2490","Glu_5_Mm_2490"))
@@ -140,14 +223,14 @@ combinedPlot(c("Glu_1_Mm_2490","Glu_5_Mm_2490"))
 # -- get growthcurver results for the plate -- 
 cleanData$time = cleanData$time/60/60
 
-growthcurverOutput = SummarizeGrowthByPlate(cleanData, plot_fit = TRUE, plot_file = "Output/GrowthCurves/YeastStrains.pdf")
-write.csv(growthcurverOutput, "Output/GrowthCurves/yeastStrains.csv")
+growthcurverOutput = SummarizeGrowthByPlate(cleanData, plot_fit = TRUE, plot_file = "Output/YeastStrains.pdf")
+write.csv(growthcurverOutput, "Output/yeastStrains.csv")
 
 
 
 # -- Plot the grwoth rates -- 
 
-growthcurverOutput = read.csv("Output/GrowthCurves/yeastStrains.csv")
+growthcurverOutput = read.csv("Output/yeastStrains.csv")
 
 growthRates = growthcurverOutput$r
 names(growthRates) = growthcurverOutput$sample
@@ -170,6 +253,12 @@ growthcurverOutputPlot$concentration = growthcurverOutputPlot$sample
 growthcurverOutputPlot$concentration[grep("_5", growthcurverOutputPlot$sample)] = "5%"
 growthcurverOutputPlot$concentration[grep("_1", growthcurverOutputPlot$sample)] = "1%"
 
+growthcurverOutputPlot$plate = growthcurverOutputPlot$sample
+growthcurverOutputPlot$plate = substr(growthcurverOutputPlot$plate, nchar(growthcurverOutputPlot$plate), nchar(growthcurverOutputPlot$plate))
+
+growthcurverOutputPlot$label = growthcurverOutputPlot$strain
+growthcurverOutputPlot$label = paste(growthcurverOutputPlot$label, growthcurverOutputPlot$plate, sep="")
+
 
 grep("Mm", growthcurverOutputPlot$sample)
 growthcurverOutputPlotTrimmed = growthcurverOutputPlot[grep("Mm", growthcurverOutputPlot$sample),]
@@ -177,7 +266,7 @@ growthcurverOutputPlotTrimmed = growthcurverOutputPlot[grep("Mm", growthcurverOu
 growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Ser_5", growthcurverOutputPlotTrimmed$sample),]
 growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Thr_5", growthcurverOutputPlotTrimmed$sample),]
 growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Glu_5", growthcurverOutputPlotTrimmed$sample),]
-growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("AS_1", growthcurverOutputPlotTrimmed$sample),]
+growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("As_1", growthcurverOutputPlotTrimmed$sample),]
 
 
 ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= r, colour=strain, label=concentration))+
@@ -190,17 +279,22 @@ ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= k, colour=media, label=c
 
 #
 
-colorset = c("brown1", "blue", "chocolate1", "cadetblue")
+mediaK = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= k, colour=label, label=concentration))+
+  geom_point()+
+  geom_text(hjust=0, vjust=0)+
+  scale_color_manual(values = colorset)+
+  ylim(0, 1)
+  #+geom_jitter(width = 0.1)
+mediaK
 
-mediaK = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= k, colour=strain, label=concentration))+
+
+mediaR = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= r, colour=label, label=concentration))+
   geom_point()+
   geom_text(hjust=0, vjust=0)+
   scale_color_manual(values = colorset)
+  #+geom_jitter(width = 0.1)
+mediaR
 
-mediaR = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= r, colour=strain, label=concentration))+
-  geom_point()+
-  geom_text(hjust=0, vjust=0)+
-  scale_color_manual(values = colorset)
 
 grid.arrange(mediaK, mediaR, ncol = 2)
 
