@@ -82,7 +82,6 @@ dataCleaner = function(mainData, instance = NULL, addTime = F, rowFirst = F ){
   cleanData
 }
 
-
 # -- make plotting function ---
 
 colorset1 = c("brown1", "blue", "chocolate1", "deepskyblue")
@@ -138,6 +137,8 @@ combinedPlotColor = function(wells, colorsetNumber =3){
 
 
 
+
+
 # -- read the data --
 #inData = mainData = read.csv("Data/Old/second2490-3CompareClean.csv")
 
@@ -146,6 +147,8 @@ inData1 = read.csv("Data/09-22-strainPhenotyping.csv")
 inData2 = read.csv("Data/10-12-strainPhenotyping.csv")
 
 inData3 = read.csv("Data/10-13-strainPhenotyping.csv")
+
+inData4 = read.csv("Data/10-19-strainPhenotyping-notOvernight.csv")
 
 
 
@@ -156,7 +159,7 @@ means1 = rbind(means1, mean1Extender)
 
 means2 = dataCleaner(inData2, "β")
 means3 = dataCleaner(inData3,"γ", addTime = T)
-
+means4 = dataCleaner(inData4, "ε")
 
 cleanData = cbind(means3, means2, means1)
 numOfPlates = 3
@@ -164,6 +167,9 @@ numOfPlates = 3
 
 cleanData = cbind(means3, means2)
 numOfPlates = 2
+
+cleanData = cbind(means3, means2, means4)
+numOfPlates = 3
 
 
 wellNames = names(cleanData)
@@ -269,6 +275,16 @@ growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("Glu_5", gro
 growthcurverOutputPlotTrimmed = growthcurverOutputPlotTrimmed[-grep("As_1", growthcurverOutputPlotTrimmed$sample),]
 
 
+growthcurverOutputPlotSerine = growthcurverOutputPlotTrimmed
+growthcurverOutputPlotSerine = growthcurverOutputPlotSerine[-grep("As_5", growthcurverOutputPlotSerine$sample),]
+growthcurverOutputPlotSerine = growthcurverOutputPlotSerine[-grep("Thr_1", growthcurverOutputPlotSerine$sample),]
+
+growthcurverOutputPlotThreonine = growthcurverOutputPlotTrimmed
+growthcurverOutputPlotThreonine = growthcurverOutputPlotThreonine[-grep("As_5", growthcurverOutputPlotThreonine$sample),]
+growthcurverOutputPlotThreonine = growthcurverOutputPlotThreonine[-grep("Ser_1", growthcurverOutputPlotThreonine$sample),]
+
+
+
 ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= r, colour=strain, label=concentration))+
   geom_point()+
   geom_text(hjust=0, vjust=0)
@@ -279,31 +295,51 @@ ggplot(growthcurverOutputPlotTrimmed, aes(x= strain, y= k, colour=media, label=c
 
 #
 
+
 mediaK = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= k, colour=label, label=concentration))+
-  geom_point()+
-  geom_text(hjust=0, vjust=0)+
   scale_color_manual(values = colorset)+
-  ylim(0, 1)
-  #+geom_jitter(width = 0.1)
+  ylim(0, 1)+
+  ylab("Carrying Capacity")+
+  geom_jitter(width = 0.1, size = 3)
 mediaK
 
 
-mediaR = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= r, colour=label, label=concentration))+
-  geom_point()+
-  geom_text(hjust=0, vjust=0)+
-  scale_color_manual(values = colorset)
-  #+geom_jitter(width = 0.1)
+mediaR = ggplot(growthcurverOutputPlotTrimmed, aes(x= media, y= r, colour=label))+
+  scale_color_manual(values = colorset)+
+  ylab("Growth Rate")+
+  geom_jitter(width = 0.1, size = 3)
 mediaR
 
 
 grid.arrange(mediaK, mediaR, ncol = 2)
 
 
+# - 
+
+serineK = ggplot(growthcurverOutputPlotSerine, aes(x= media, y= k, colour=label, label=concentration))+
+  scale_color_manual(values = colorset)+
+  ylim(0, 1)+
+  ylab("Carrying Capacity")+
+  geom_jitter(width = 0.1, size = 3)
+serineK
+
+threonineK = ggplot(growthcurverOutputPlotThreonine, aes(x= media, y= k, colour=label, label=concentration))+
+  scale_color_manual(values = colorset)+
+  ylim(0, 1)+
+  ylab("Carrying Capacity")+
+  geom_jitter(width = 0.1, size = 3)
+threonineK
 
 
+serR = ggplot(growthcurverOutputPlotSerine, aes(x= media, y= r, colour=label))+
+  scale_color_manual(values = colorset)+
+  ylab("Growth Rate")+
+  geom_jitter(width = 0.1, size = 3)
+serR
 
 
-
-
-
-
+thrR = ggplot(growthcurverOutputPlotThreonine, aes(x= media, y= r, colour=label))+
+  scale_color_manual(values = colorset)+
+  ylab("Growth Rate")+
+  geom_jitter(width = 0.1, size = 3)
+thrR
