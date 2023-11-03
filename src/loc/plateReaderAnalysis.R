@@ -27,6 +27,7 @@ colMeanings = list(
 )
 rowFirst = F
 numOfPlates = 2
+
 # ---- Clean the data  ---- 
 
 # - generate meaningful well names -  
