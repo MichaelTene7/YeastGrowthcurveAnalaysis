@@ -22,7 +22,7 @@ combinedPlotColor2 = function(wells, colorsetNumber =3){
   
   colorsets = data.frame(colorset1, colorset2, colorset3, colorset4)
   colorset = unlist(colorsets[1:colorsetNumber,])
-  colorset = c( "red", "red3", "chocolate1","darkgreen", "green4")
+  colorset = c( "chocolate1", "chocolate3", "purple","darkgreen", "green4")
   names(colorset) =NULL
   plot <- ggplot( aes(x=time), data = dummyData)
   for (i in 1:length(wells)) { 

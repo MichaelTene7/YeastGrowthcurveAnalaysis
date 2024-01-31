@@ -28,7 +28,7 @@ colMeanings = list(
   c("8", "Thr_5")
 )
 rowFirst = F
-numOfPlates = 2
+numOfPlates = 1
 
 # -- read the data --
 #inData = mainData = read.csv("Data/Old/second2490-3CompareClean.csv")
@@ -51,6 +51,8 @@ means1 = rbind(means1, mean1Extender)
 means2 = dataCleaner(inData2, "β")
 means3 = dataCleaner(inData3,"γ", addTime = T)
 means4 = dataCleaner(inData4, "ε")
+cleanData = means3
+
 
 cleanData = cbind(means3, means2, means1)
 numOfPlates = 3
