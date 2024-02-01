@@ -111,7 +111,7 @@ combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumb
   lightgreen = c("springgreen1", "springgreen2", "springgreen3", "springgreen4")
   purple = c("purple", "purple1", "purple2", "purple3")
   backgroundBlue = c("cornflowerblue", "cornflowerblue", "cornflowerblue", "cornflowerblue")
-  backgroundRed = c("indianred2", "indianred2", "indianred2", "indianred2")
+  backgroundRed = c("lightcoral", "lightcoral", "lightcoral", "lightcoral")
   boldAverages = c("blue", "red", "darkgreen", "magenta4")
   
   
@@ -132,12 +132,12 @@ combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumb
   names(colorset) = sort(wells)
   plot <- ggplot( aes(x=time), data = cleanData)
   for (i in 1:length(wells)) { 
-    loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
+    loop_input = paste("geom_smooth(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
     plot <- plot + eval(parse(text=loop_input))  
   }
   plot <- plot + guides( color = guide_legend(title = "",) )
   plot = plot + scale_color_manual(values = colorset)
-  plot = plot + ylim(0,1) + ylab("Absorbance")
+  plot = plot + ylim(0,1) + ylab("Absorbance") +xlab("Time [s]") +theme_bw()
   
   if(!is.null(legendTitle)){
     plot = plot +  guides(color = guide_legend(title = legendTitle))
