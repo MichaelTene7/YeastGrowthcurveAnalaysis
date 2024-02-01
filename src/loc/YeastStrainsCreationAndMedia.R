@@ -140,7 +140,7 @@ wellsSerMmPlotNew
 cleanData$time = cleanData$time/60/60
 
 growthcurverOutput = SummarizeGrowthByPlate(cleanData, plot_fit = TRUE, plot_file = "Output/YeastStrains.pdf")
-write.csv(growthcurverOutput, "Output/yeastStrains.csv")
+#write.csv(growthcurverOutput, "Output/yeastStrains.csv")
 
 
 
@@ -234,14 +234,16 @@ serineK = ggplot(growthcurverOutputPlotSerine, aes(x= sorter, y= k, colour=label
   ylim(0, 1)+
   ylab("Carrying Capacity [K]")+
   geom_jitter(width = 0.1, size = 3)+
-  theme_bw()
+  theme_bw()+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_text(size=12))
 serineK
 
 
 threonineK = ggplot(growthcurverOutputPlotThreonine, aes(x= sorter, y= k, colour=label, label=concentration))+
   scale_color_manual(values = colorset)+
   ylim(0, 1)+
-  ylab("Growth Rate [r]")+
+  ylab("Carrying Capacity [K]")+
   geom_jitter(width = 0.1, size = 3)+
   theme_bw()
 threonineK
@@ -249,15 +251,17 @@ threonineK
 
 serR = ggplot(growthcurverOutputPlotSerine, aes(x= sorter, y= r, colour=label))+
   scale_color_manual(values = colorset)+
-  ylab("Growth Rate")+
+  ylab("Growth Rate [r]")+
   geom_jitter(width = 0.1, size = 3)+
-  theme_bw()
+  theme_bw()+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_text(size=12))
 serR
 
 
 thrR = ggplot(growthcurverOutputPlotThreonine, aes(x= sorter, y= r, colour=label))+
   scale_color_manual(values = colorset)+
-  ylab("Growth Rate")+
+  ylab("Growth Rate [r]")+
   geom_jitter(width = 0.1, size = 3)+
   theme_bw()
 thrR
