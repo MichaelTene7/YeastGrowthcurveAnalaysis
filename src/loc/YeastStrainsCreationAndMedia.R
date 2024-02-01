@@ -28,12 +28,12 @@ colMeanings = list(
   c("8", "Thr_5")
 )
 rowFirst = F
-numOfPlates = 1
+numOfPlates = 2
 
 # -- read the data --
 #inData = mainData = read.csv("Data/Old/second2490-3CompareClean.csv")
 
-inData1 = read.csv("Data/09-22-strainPhenotyping.csv")
+#inData1 = read.csv("Data/09-22-strainPhenotyping.csv")
 
 inData2 = read.csv("Data/10-12-strainPhenotyping.csv")
 
@@ -43,23 +43,20 @@ inData4 = read.csv("Data/10-19-strainPhenotyping-notOvernight.csv")
 
 
 
-means1 = dataCleaner(inData1, "α")
-mean1Extender = data.frame(matrix(nrow=44, ncol=64))
-colnames(mean1Extender) = colnames(means1)
-means1 = rbind(means1, mean1Extender)
+#means1 = dataCleaner(inData1, "α")
+#mean1Extender = data.frame(matrix(nrow=44, ncol=64))
+#colnames(mean1Extender) = colnames(means1)
+#means1 = rbind(means1, mean1Extender)
 
-means2 = dataCleaner(inData2, "β")
+means2 = dataCleaner(inData2, "β", addTime = F)
 means3 = dataCleaner(inData3,"γ", addTime = T)
-means4 = dataCleaner(inData4, "ε")
-cleanData = means3
+means4 = dataCleaner(inData4, "ε", addTime = F)
 
-
-cleanData = cbind(means3, means2, means1)
-numOfPlates = 3
-
-
-cleanData = cbind(means3, means2)
-numOfPlates = 2
+#cleanData = means3
+#cleanData = cbind(means3, means2, means1)
+#numOfPlates = 3
+#cleanData = cbind(means3, means2)
+#numOfPlates = 2
 
 cleanData = cbind(means3, means2, means4)
 numOfPlates = 3
@@ -117,6 +114,24 @@ grid.arrange(wellsASMmPlot, wellsASMm5Plot, ncol = 2)
 combinedPlot(c("Glu_1_Mm_2490","Glu_5_Mm_2490"))
 
 
+# New plot remake 
+wellsSerMm = wellNames[grepl("Ser_1", wellNames) & grepl("Mm", wellNames)]
+wellsSerMmPlot = combinedPlotColor(wellsSerMm, colorsetNumber = 4, groupedNumber = 3, groupRepeatNumber = 2, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue"))
+
+wellsSerMmControl = wellsSerMm[grepl("2491",wellsSerMm)  | grepl("2493", wellsSerMm)]
+wellsSerMmDeletion = wellsSerMm[grepl("2490",wellsSerMm)  | grepl("2492", wellsSerMm)]
+serMmControlAverage = rowMeans(cleanData[wellsSerMmControl])
+serMmDeletionAverage = rowMeans(cleanData[wellsSerMmDeletion])
+
+cleanData = cbind(cleanData, serMmControlAverage)
+cleanData = cbind(cleanData, serMmDeletionAverage)
+
+serWellSet = append(wellsSerMm, c("serMmControlAverage", "serMmDeletionAverage"))
+
+wellsSerMmPlotNew = combinedPlotColor(serWellSet, colorsetNumber = 5, groupedNumber = 3, groupRepeatNumber = 2, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue", "boldAverages"))
+
+
+
 #
 
 # -- get growthcurver results for the plate -- 
@@ -158,6 +173,12 @@ growthcurverOutputPlot$plate = substr(growthcurverOutputPlot$plate, nchar(growth
 growthcurverOutputPlot$label = growthcurverOutputPlot$strain
 growthcurverOutputPlot$label = paste(growthcurverOutputPlot$label, growthcurverOutputPlot$plate, sep="")
 
+growthcurverOutputPlot$type = growthcurverOutputPlot$strain
+growthcurverOutputPlot$type[growthcurverOutputPlot$type == 2490 | growthcurverOutputPlot$type ==  2492] = "Deletion"
+growthcurverOutputPlot$type[growthcurverOutputPlot$type == 2491 | growthcurverOutputPlot$type ==  2493] = "Control"
+
+growthcurverOutputPlot$sorter = growthcurverOutputPlot$media
+growthcurverOutputPlot$sorter = paste(growthcurverOutputPlot$sorter, growthcurverOutputPlot$type, sep = "-")
 
 grep("Mm", growthcurverOutputPlot$sample)
 growthcurverOutputPlotTrimmed = growthcurverOutputPlot[grep("Mm", growthcurverOutputPlot$sample),]
@@ -209,14 +230,19 @@ grid.arrange(mediaK, mediaR, ncol = 2)
 
 # - 
 
-serineK = ggplot(growthcurverOutputPlotSerine, aes(x= media, y= k, colour=label, label=concentration))+
+backgroundBlue = c("cornflowerblue", "cornflowerblue", "cornflowerblue")
+backgroundRed = c("indianred2", "indianred2", "indianred2")
+colorset = c(backgroundRed, backgroundBlue,  backgroundRed, backgroundBlue)
+
+serineK = ggplot(growthcurverOutputPlotSerine, aes(x= sorter, y= k, colour=label, label=concentration))+
   scale_color_manual(values = colorset)+
   ylim(0, 1)+
   ylab("Carrying Capacity")+
   geom_jitter(width = 0.1, size = 3)
 serineK
 
-threonineK = ggplot(growthcurverOutputPlotThreonine, aes(x= media, y= k, colour=label, label=concentration))+
+
+threonineK = ggplot(growthcurverOutputPlotThreonine, aes(x= sorter, y= k, colour=label, label=concentration))+
   scale_color_manual(values = colorset)+
   ylim(0, 1)+
   ylab("Carrying Capacity")+
@@ -224,14 +250,14 @@ threonineK = ggplot(growthcurverOutputPlotThreonine, aes(x= media, y= k, colour=
 threonineK
 
 
-serR = ggplot(growthcurverOutputPlotSerine, aes(x= media, y= r, colour=label))+
+serR = ggplot(growthcurverOutputPlotSerine, aes(x= sorter, y= r, colour=label))+
   scale_color_manual(values = colorset)+
   ylab("Growth Rate")+
   geom_jitter(width = 0.1, size = 3)
 serR
 
 
-thrR = ggplot(growthcurverOutputPlotThreonine, aes(x= media, y= r, colour=label))+
+thrR = ggplot(growthcurverOutputPlotThreonine, aes(x= sorter, y= r, colour=label))+
   scale_color_manual(values = colorset)+
   ylab("Growth Rate")+
   geom_jitter(width = 0.1, size = 3)
