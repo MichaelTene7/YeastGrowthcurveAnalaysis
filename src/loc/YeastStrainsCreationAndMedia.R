@@ -116,9 +116,10 @@ grid.arrange(wellsASMmPlot, wellsASMm5Plot, ncol = 2)
 combinedPlot(c("Glu_1_Mm_2490","Glu_5_Mm_2490"))
 }
 
+
 # New plot remake 
 wellsSerMm = wellNames[grepl("Ser_1", wellNames) & grepl("Mm", wellNames)]
-wellsSerMmPlot = combinedPlotColor(wellsSerMm, colorsetNumber = 4, groupedNumber = 3, groupRepeatNumber = 2, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue"))
+wellsSerMmPlot = combinedPlotColor(wellsSerMm, numberofGroups = 4, groupedNumber = 3, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue"))
 
 wellsSerMmControl = wellsSerMm[grepl("2491",wellsSerMm)  | grepl("2493", wellsSerMm)]
 wellsSerMmDeletion = wellsSerMm[grepl("2490",wellsSerMm)  | grepl("2492", wellsSerMm)]
@@ -130,7 +131,7 @@ cleanData = cbind(cleanData, serMmDeletionAverage)
 
 serWellSet = append(wellsSerMm, c("serMmControlAverage", "serMmDeletionAverage"))
 
-wellsSerMmPlotNew = combinedPlotColor(serWellSet, colorsetNumber = 5, groupedNumber = 3, groupRepeatNumber = 2, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue", "boldAverages"))
+wellsSerMmPlotNew = combinedPlotColor(serWellSet, numberofGroups = 5, groupedNumber = 3, groupRepeatNumber = 2, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundRed", "backgroundBlue", "boldAverages"))
 wellsSerMmPlotNew
 
 
