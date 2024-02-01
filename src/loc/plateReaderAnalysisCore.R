@@ -100,8 +100,9 @@ combinedPlot = function(wells){
 
 
 
-
-combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumber =2, groupRepeatNumber = 2, colorOrder = c("red", "blue", "orange", "cyan", "pink", "lightgreen", "purple"), labelSet = NULL, legendTitle = NULL){
+#Param groupedNumber is the number of wells in the same group in a row
+#Param groupsRepeatTimes is if when the list has been completed, how many times it should go back and start with the first group
+combinedPlotColor = function(wells, numberofGroups = .GlobalEnv$numberofGroups, groupedNumber =3, groupsRepeatTimes = 1, colorOrder = c("red", "blue", "orange", "cyan", "pink", "lightgreen", "purple"), labelSet = NULL, legendTitle = NULL){
   #This is a set of colors, eachof which has four versions of it 
   red = c("red", "red3", "firebrick3", "red2")
   blue = c("blue", "blue3", "blue4", "blue2")
@@ -114,29 +115,30 @@ combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumb
   backgroundRed = c("lightcoral", "lightcoral", "lightcoral", "lightcoral")
   boldAverages = c("blue", "red3", "darkgreen", "magenta4")
   
+  colorsetNest = data.frame(red)                                                #This just makes a dataframe with the correct number of rows
   
-  colorsetNames = c("colorset1", "colorset2", "colorset3", "colorset4","colorset5","colorset6","colorset7")     #These are placeholder colorsetnames, they are used to reference the colorsets regardless of what colors they actually hold
+  for(i in 1:numberofGroups){                                                   #For each of the number of colors requested 
+    colorsetNest[i] =  eval(parse( text = colorOrder[i]))                       #Set the color in that column of colorsetNest to be the color at that position in color order
+    names(colorsetNest)[i] = colorOrder[i]                                      #match the column name to the colorset name
+  }
   
-  for(i in 1:colorsetNumber){                                                   #For each of the number of colors requested 
-    assign(colorsetNames[i], eval(parse( text = colorOrder[i])))                #Set the colorsset to the color found in colorOrder
+  masterColorSet = NULL                                                         #Make an empty colorSets object
+  for(i in 1:groupsRepeatTimes){                                                #Do this for each pass of the groups                                           
+    rowSet = ((groupedNumber *(i-1))+1):(groupedNumber * i)                     #Determine which indexes are being used this run. Ie. (groupedNumber =2) if this is repeat 1, get indexes 1 and 2; if this is repeat 2, get indexes 3 and 4 
+    for(j in 1:numberofGroups){                                                 #For each of the colorsets                                             
+      masterColorSet = append(masterColorSet, colorsetNest[rowSet,j])                     #Add the correct indexes of the colorset to the master colorset 
+    }
   }
   
   
-  colorsets = NULL
-  for(i in 1:groupRepeatNumber){
-    rowSet = ((groupedNumber *(i-1))+1):(groupedNumber * i)
-    colorsets = cbind(colorsets, colorset1[rowSet], colorset2[rowSet], colorset3[rowSet], colorset4[rowSet], colorset5[rowSet]) #This is not dynamic even thoguh is should be. This is an open flaw in this funciton. 
-  }
-  colorsets = data.frame(colorsets)
-  colorset = unlist(colorsets) 
-  names(colorset) = sort(wells)
+  names(masterColorSet) = sort(wells)
   plot <- ggplot( aes(x=time), data = cleanData)
   for (i in 1:length(wells)) { 
     loop_input = paste("geom_smooth(aes(y=",wells[i],",color='",wells[i],"'))", sep="")
     plot <- plot + eval(parse(text=loop_input))  
   }
   plot <- plot + guides( color = guide_legend(title = "",) )
-  plot = plot + scale_color_manual(values = colorset)
+  plot = plot + scale_color_manual(values = masterColorSet)
   plot = plot + ylim(0,1) + ylab("Absorbance") +xlab("Time [s]") +theme_bw()
   
   if(!is.null(legendTitle)){
@@ -145,7 +147,7 @@ combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumb
 
   if(!is.null(labelSet)){
     startOfEachColor = NULL
-    for(i in 0:(colorsetNumber-1)){
+    for(i in 0:(numberofGroups-1)){
       colorstart = (i*groupedNumber)+1
       startOfEachColor = append(startOfEachColor, colorstart)
     }
@@ -172,3 +174,20 @@ combinedPlotColorCustom = function(wells, colorset = colorOrder){
   plot = plot + ylim(0,1)
   plot
 }
+
+
+
+
+# Old colorset code 
+#colorsetNames = c("colorset1", "colorset2", "colorset3", "colorset4","colorset5","colorset6","colorset7")     #These are placeholder colorsetnames, they are used to reference the colorsets regardless of what colors they actually hold
+
+#colorsets = NULL
+#for(i in 1:groupRepeatNumber){
+#  rowSet = ((groupedNumber *(i-1))+1):(groupedNumber * i)
+#  colorsets = cbind(colorsets, colorset1[rowSet], colorset2[rowSet], colorset3[rowSet], colorset4[rowSet], colorset5[rowSet]) #This is not dynamic even thoguh is should be. This is an open flaw in this funciton. 
+#}
+#colorsets = data.frame(colorsets)
+#colorset = unlist(colorsets) 
+#for(i in 1:colorsetNumber){                                                   #For each of the number of colors requested 
+#  assign(colorsetNames[i], eval(parse( text = colorOrder[i])))                #Set the colorsset to the color found in colorOrder
+#}
