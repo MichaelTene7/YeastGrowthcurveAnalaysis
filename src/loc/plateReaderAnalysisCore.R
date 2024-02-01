@@ -112,7 +112,7 @@ combinedPlotColor = function(wells, colorsetNumber = numberofGroups, groupedNumb
   purple = c("purple", "purple1", "purple2", "purple3")
   backgroundBlue = c("cornflowerblue", "cornflowerblue", "cornflowerblue", "cornflowerblue")
   backgroundRed = c("lightcoral", "lightcoral", "lightcoral", "lightcoral")
-  boldAverages = c("blue", "red", "darkgreen", "magenta4")
+  boldAverages = c("blue", "red3", "darkgreen", "magenta4")
   
   
   colorsetNames = c("colorset1", "colorset2", "colorset3", "colorset4","colorset5","colorset6","colorset7")     #These are placeholder colorsetnames, they are used to reference the colorsets regardless of what colors they actually hold
