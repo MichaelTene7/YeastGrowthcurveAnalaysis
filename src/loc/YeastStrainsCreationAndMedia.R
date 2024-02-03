@@ -48,9 +48,9 @@ inData4 = read.csv("Data/10-19-strainPhenotyping-notOvernight.csv")
 #colnames(mean1Extender) = colnames(means1)
 #means1 = rbind(means1, mean1Extender)
 
-means2 = dataCleaner(inData2, "β", addTime = F)
-means3 = dataCleaner(inData3,"γ", addTime = T)
-means4 = dataCleaner(inData4, "ε", addTime = F)
+means2 = dataCleaner(inData2, "_β", addTime = F)
+means3 = dataCleaner(inData3,"_γ", addTime = T)
+means4 = dataCleaner(inData4, "_ε", addTime = F)
 
 #cleanData = means3
 #cleanData = cbind(means3, means2, means1)
