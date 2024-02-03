@@ -1,3 +1,44 @@
+#-------------------------------------------------------------------------------------------------------------------
+#Code from making the fancy long function 
+
+testFunction = function(wells, groupingColumn = NULL, numberofGroups = NULL, groupedNumber =3, groupsRepeatTimes = 1, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub, dataSet = longData){
+  #This is a set of colors, eachof which has four versions of it 
+  
+  numberofGroups = nrow(dataSet %>% count( {{groupingColumn}} ))
+  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                 # Make a column with a static name that has the grouping data
+  
+  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn)))                
+  dataSet = dataSet %>% group_by(groupValue) %>% mutate(groupInstance = row_number())
+  dataSet
+}
+testOut = testFunction(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
+combinedPlotColorLongFancy(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
+combinedPlotColorLongFancy(wells, groupingColumn = column, autoGroupLabel = T)
+combinedPlotColorLongFancy(wells, groupingColumn = strain, autoGroupLabel = T)
+
+testWells = wellNames
+wellsSerMm = wells[grepl("Ser", wells) & grepl("Mm", wells)]
+
+
+combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T)
+
+
+colorstart = which(testOut$groupValue == i)[1]
+
+currentGroupValue = testOut$groupValue[i]
+currentGroupInstance = testOut$groupInstance[i]
+
+currentColorSet = colorListHub[[currentGroupValue]]
+currentColor = currentColorSet[[currentGroupInstance]]
+masterColorSet = append(masterColorSet, currentColor)
+
+
+
+
+
+
+
+
 str(wellsSerMmPlot)
 
 # -----------------------------------------------------------------------------------------------------------------
