@@ -9,9 +9,9 @@ rowsFirst = F
 numOfSamples = 2
 numOfPlates = 1
 
-# ---- Clean the data  ---- 
+# ------ Clean the data  ------
 
-# - generate meaningful well names -  
+# --- generate meaningful well names ---  
 convertBoth = function(wellNumbers, rowFirst = F, rowMeaning = rowMeanings, colMeaning = colMeanings){
   wellNames = wellNumbers
   if(rowFirst){
@@ -36,7 +36,7 @@ convertBoth = function(wellNumbers, rowFirst = F, rowMeaning = rowMeanings, colM
 }
 
 
-# - get the means out - 
+# --- get the means out of the data file ---
 dataCleaner = function(mainData, instance = NULL, addTime = T, rowFirst = rowsFirst ){
   # -- clean the data -- #
   
@@ -100,21 +100,20 @@ dataCleanerLong = function(mainData, instance = NULL, addTime = T, rowFirst = ro
   
   # -- organize the data in Longer format -- 
   
-  longData = pivot_longer(cleanData, 2:ncol(cleanData))
+  longData = pivot_longer(cleanData, 2:ncol(cleanData))                         # pivot the data so that each timepoint is its own row
+  names(longData)[2] = "wellNumber"    
   
-  # -- make a wellName based on the wellNumber
-  names(longData)[2] = "wellNumber"
+  
+  # - separate data from wellNumber into columns -
+  longData$wellNumber2 = longData$wellNumber
+  longData = separate_wider_position(longData, wellNumber2, c(row = 1, column = 1))
+  
+  # - make a wellName based on the wellNumber -
   longData$wellName = longData$wellNumber
   longData$wellName = convertBoth(longData$wellName, rowFirst)                # Convert the well name using the specified key
   longData$wellName = sapply(longData$wellName , paste, instance, sep="")     # If there is an Instance marker added (to give different plates different row names), add it to the row name
   
-  
-  # - separate data from wellNumber into columns
-  longData$wellNumber2 = longData$wellNumber
-  longData = separate_wider_position(longData, wellNumber2, c(row = 1, column = 1))
-  
-  ?separate_longer_position
-  # - separate data from wellName into columns
+  # - separate data from wellName into columns -
 
   longData$wellName2 = longData$wellName
   if(is.null(splitColumnNames)){
@@ -128,15 +127,12 @@ dataCleanerLong = function(mainData, instance = NULL, addTime = T, rowFirst = ro
   longData                                                                     #Return the cleaned data 
 }
 
-means3Long = dataCleanerLong(inData3,"_γ", addTime = T, splitColumnNames = c("media", "concentration", "nutrients", "strain", "plate"))
-longData = means3Long
 
-
-# -- make plotting function ---
+# ------ make plotting functions -------
 
 
 
-# -- color lists --
+# ---- color lists ----
 {
   colorListsHub = NULL
   colorListsHub$red = c("red", "red3", "firebrick3", "red2", "red4", "red1", "firebrick", "firebrick2")
@@ -169,58 +165,35 @@ longData = means3Long
 }
 
 
+# ---- Long-Data plotting functions ----
 
-
-
-# -- Long-Data plotting functions
-
-combinedPlot = function(wells){
-  plot <- ggplot( aes(x=time), data = .GlobalEnv$cleanData)                     # Set the X axis as time
-  for (i in 1:length(wells)) {                                                  # For each well in the vector of wells provided 
-    loop_input = paste("geom_point(aes(y=",wells[i],",color='",wells[i],"'))", sep="") #Write out the ggplot command to graph that well, and give it a unique color
-    plot <- plot + eval(parse(text=loop_input))                                 # Draw that line on top of the existing plot 
+combinedPlotLong = function(wells = NULL, dataSet = .GlobalEnv$cleanData){
+  if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
+    dataSet = dataSet[which(dataSet$wellName %in% wells),]
   }
+  plot <- ggplot(data = dataSet,  aes(x=time, y=value, color=wellName))
   plot <- plot + guides( color = guide_legend(title = "",) )                    #Add a legend to the plot
   plot                                                                          #Return the plot 
 }
 
-groupingColumn = strain
-
-
-testFunction = function(wells, groupingColumn = NULL, numberofGroups = NULL, groupedNumber =3, groupsRepeatTimes = 1, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub, dataSet = longData){
-  #This is a set of colors, eachof which has four versions of it 
-  
-  numberofGroups = nrow(dataSet %>% count( {{groupingColumn}} ))
-  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                 # Make a column with a static name that has the grouping data
-  
-  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn)))                
-  dataSet = dataSet %>% group_by(groupValue) %>% mutate(groupInstance = row_number())
-  dataSet
-}
-testOut = testFunction(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
-
-
-combinedPlotColorLongFancy(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
-combinedPlotColorLongFancy(wells, groupingColumn = strain, groupedNumber = 8)
-
 combinedPlotColorLongFancy = function(wells = NULL, groupingColumn = NULL, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub, dataSet = longData){
   
-  if(!is.null(wells)){
+  if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellName %in% wells),]
   }
   
   
   numberofGroups = nrow(dataSet %>% count( {{groupingColumn}} ))                # Count how many different values there are in the grouping column
-  uniqueSamples = unique(dataSet$wellName)
+  uniqueSamples = unique(dataSet$wellName)                                      # Get a list of the unique samples
   
   
   dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                 # Make a column with a static name that has the grouping data
   
-  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the group number of the row                 
+  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
   dataSet = dataSet %>% group_by({{groupingColumn}}) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
   
   
-  colorsetNest = data.frame(colorListHub$red)                                                #This just makes a dataframe with the correct number of rows
+  colorsetNest = data.frame(colorListHub$red)                                   #This just makes a dataframe with the correct number of rows
   
   for(i in 1:numberofGroups){                                                   #For each of the number of colors requested 
     colorsetNest[i] =  eval(parse( text = paste("colorListHub$", colorOrder[i], sep="")))                       #Set the color in that column of colorsetNest to be the color, found in ColorListHub, at that position in color order
@@ -229,23 +202,23 @@ combinedPlotColorLongFancy = function(wells = NULL, groupingColumn = NULL, color
   
   masterColorSet = NULL                                                         #Make an empty colorSets object
   for(i in 1:length(uniqueSamples)){                                         #Do this for each sample   
-    currentGroupValue = dataSet$groupValue[i]
-    currentColorSet = colorListHub[[currentGroupValue]]
+    currentGroupValue = dataSet$groupValue[i]                                   #Get the row's group value
+    currentColorSet = colorListHub[[currentGroupValue]]                         #Set the colorlist to the entry in colorOrder that is the group's value
     
     currentGroupInstance = dataSet$groupInstance[i]
     while(currentGroupInstance > length(currentColorSet)){                              #Make it so that if there are more values than the group size
       currentGroupInstance = currentGroupInstance - length(currentColorSet)                     #remove one multiple of the group size until it is smaller
     }                                                                           #This causes the colors to loop around if they go over the group size 
     
-    currentColor = currentColorSet[[currentGroupInstance]]
+    currentColor = currentColorSet[[currentGroupInstance]]                      
     
    
     masterColorSet = append(masterColorSet, currentColor)
       
   }
-  print(masterColorSet)
+  #print(masterColorSet)
   
-  names(masterColorSet) = sort(uniqueSamples)
+  names(masterColorSet) = sort(uniqueSamples)                                   #Connect the colors to the sample names 
   plot <- ggplot( aes(x=time, y=value, color=wellName), data = dataSet) 
   if(useLine){ plot = plot +geom_line()}else{plot = plot +geom_point()}
   plot <- plot + guides( color = guide_legend(title = "",) )
@@ -278,26 +251,6 @@ combinedPlotColorLongFancy = function(wells = NULL, groupingColumn = NULL, color
   }
   plot
 }
-combinedPlotColorLongFancy(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
-combinedPlotColorLongFancy(wells, groupingColumn = column, autoGroupLabel = T)
-combinedPlotColorLongFancy(wells, groupingColumn = strain, autoGroupLabel = T)
-
-testWells = wellNames
-wellsSerMm = wells[grepl("Ser", wells) & grepl("Mm", wells)]
-
-
-combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T)
-
-
-colorstart = which(testOut$groupValue == i)[1]
-
-currentGroupValue = testOut$groupValue[i]
-currentGroupInstance = testOut$groupInstance[i]
-
-currentColorSet = colorListHub[[currentGroupValue]]
-currentColor = currentColorSet[[currentGroupInstance]]
-masterColorSet = append(masterColorSet, currentColor)
-
 
 
 combinedPlotColorLong = function(wells, numberofGroups = .GlobalEnv$numberofGroups, groupedNumber =3, groupsRepeatTimes = 1, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub, dataSet = longData){
@@ -342,23 +295,6 @@ combinedPlotColorLong = function(wells, numberofGroups = .GlobalEnv$numberofGrou
   }
   plot
 }
-
-wells = unique(longData$wellName)
-
-combinedPlotColorLong(wells, numberofGroups = 8, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
-combinedPlotColorLong(wells, numberofGroups = 8, groupedNumber = 8)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # -- Non-long plotting functions -- 
@@ -442,32 +378,3 @@ combinedPlotColorCustom = function(wells, colorset = colorOrder){
 
 
 
-# ---- Old Code ---- 
-colorset1 = c("brown1", "blue", "chocolate1", "deepskyblue")
-colorset2 = c("brown3", "blue3", "chocolate3", "deepskyblue3")
-colorset3 = c("brown4", "blue4", "chocolate4", "deepskyblue4")
-colorset4 = c("brown2", "blue2", "chocolate2", "deepskyblue2")
-
-colorset1 = c("brown1", "brown3", "brown4", "brown2")
-colorset2 = c("blue", "blue3", "blue4", "blue2")
-colorset3 = c("chocolate1", "chocolate3", "chocolate4", "chocolate2")
-colorset4 = c("deepskyblue", "deepskyblue3", "deepskyblue4", "deepskyblue2")
-colorset5 = c("hotpink", "hotpink1", "hotpink2", "hotpink3")
-
-colorsets = data.frame(colorset1, colorset2, colorset3, colorset4)
-colorset = unlist(colorsets[1:numOfPlates,])
-names(colorset) =NULL
-
-# Old colorset code 
-#colorsetNames = c("colorset1", "colorset2", "colorset3", "colorset4","colorset5","colorset6","colorset7")     #These are placeholder colorsetnames, they are used to reference the colorsets regardless of what colors they actually hold
-
-#colorsets = NULL
-#for(i in 1:groupRepeatNumber){
-#  rowSet = ((groupedNumber *(i-1))+1):(groupedNumber * i)
-#  colorsets = cbind(colorsets, colorset1[rowSet], colorset2[rowSet], colorset3[rowSet], colorset4[rowSet], colorset5[rowSet]) #This is not dynamic even thoguh is should be. This is an open flaw in this funciton. 
-#}
-#colorsets = data.frame(colorsets)
-#colorset = unlist(colorsets) 
-#for(i in 1:colorsetNumber){                                                   #For each of the number of colors requested 
-#  assign(colorsetNames[i], eval(parse( text = colorOrder[i])))                #Set the colorsset to the color found in colorOrder
-#}
