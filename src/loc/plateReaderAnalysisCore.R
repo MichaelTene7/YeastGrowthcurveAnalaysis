@@ -176,7 +176,7 @@ combinedPlotLong = function(wells = NULL, dataSet = .GlobalEnv$cleanData){
   plot                                                                          #Return the plot 
 }
 
-plotGrowth = function(wells = NULL, groupingColumn = NULL, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub, dataSet = longData){
+plotGrowth = function(groupingColumn, wells = NULL, dataSet = cleanData, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub){
   
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellName %in% wells),]
