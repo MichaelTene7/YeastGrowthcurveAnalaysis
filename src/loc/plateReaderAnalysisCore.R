@@ -4,6 +4,8 @@ library(growthcurver)
 library(dplyr)
 library(tidyr)
 
+source("Src/Reu/colorLists.R")
+
 # -- well name conversion arguments -- 
 rowsFirst = F
 numOfSamples = 2
@@ -132,37 +134,7 @@ dataCleanerLong = function(mainData, instance = NULL, addTime = T, rowFirst = ro
 
 
 
-# ---- color lists ----
-{
-  colorListsHub = NULL
-  colorListsHub$red = c("red", "red3", "firebrick3", "red2", "red4", "red1", "firebrick", "firebrick2")
-  colorListsHub$blue = c("blue", "blue4", "royalblue4", "blue3", "blue2", "navy", "blue1", "mediumblue")
-  colorListsHub$orange = c("chocolate1", "chocolate3", "chocolate4", "chocolate2", "chocolate", "darkorange", "darkorange2", "darkorange3")
-  colorListsHub$cyan = c("deepskyblue", "deepskyblue3", "deepskyblue4", "deepskyblue2", "darkturquoise", "turquoise3", "cyan3", "skyblue3")
-  colorListsHub$pink = c("hotpink", "hotpink1", "hotpink2", "hotpink3", "orchid", "orchid1", "orchid3", "orchid2")
-  colorListsHub$green = c("springgreen1", "springgreen2", "springgreen3", "springgreen4", "seagreen3", "seagreen", "seagreen1", "seagreen2")
-  colorListsHub$purple = c("purple", "purple1", "purple2", "purple3", "darkorchid", "mediumpurple", "darkorchid4", "darkorchid2")
-  colorListsHub$yellow = c("gold1", "gold3", "gold4", "gold2", "goldenrod1", "goldenrod2", "goldenrod", "goldenrod3")
-  colorListsHub$tan = c("papayawhip", "peachpuff", "peachpuff2", "peachpuff3", "wheat1", "wheat2", "wheat3", "wheat")
-  colorListsHub$lightblue = c("lightblue", "lightblue1", "lightblue2", "lightblue3", "skyblue", "skyblue1", "skyblue2", "lightsteelblue1")
-  colorListsHub$lightred = c("indianred", "indianred1", "indianred2", "indianred3", "brown3", "coral2", "coral3", "coral1")
-  colorListsHub$brightgreen = c("chartreuse", "chartreuse2", "chartreuse3", "olivedrab2", "olivedrab1", "olivedrab3", "darkolivegreen1", "darkolivegreen2")
-  
-  colorListsHub$backgroundRed = rep("indianred2", 8)
-  colorListsHub$backgroundBlue = rep("cornflowerblue", 8)
-  colorListsHub$backgroundOrange = rep("orange1", 8)
-  colorListsHub$backgroundCyan = rep("turquoise", 8)
-  colorListsHub$backgroundPink = rep("rosybrown1", 8)
-  colorListsHub$backgroundGreen = rep("lightgreen", 8)
-  colorListsHub$backgroundPurple = rep("mediumorchid2", 8)
-  colorListsHub$backgroundYellow = rep("lightgoldenrod", 8)
-  colorListsHub$backgroundTan = rep("papayawhip", 8)
-  colorListsHub$backgroundLightBlue = rep("lightblue1", 8)
-  colorListsHub$backgroundLightRed = rep("lightcoral", 8)
-  colorListsHub$backgroundBrightGreen = rep("darkolivegreen1", 8)
-  
-  colorListsHub$boldColors = c("darkred", "darkblue", "darkorange", "cyan4", "hotpink4", "darkgreen", "magenta4", "yellow3", "tan", "skyblue3", "tomato", "olivedrab4")
-}
+
 
 
 # ---- Long-Data plotting functions ----
@@ -176,54 +148,79 @@ combinedPlotLong = function(wells = NULL, dataSet = .GlobalEnv$cleanData){
   plot                                                                          #Return the plot 
 }
 
-plotGrowth = function(groupingColumn, wells = NULL, dataSet = cleanData, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub){
+plotGrowth = function(groupingColumn, wells = NULL, dataSet = cleanData, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub){
   
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellName %in% wells),]
   }
   
-  
   numberofGroups = nrow(dataSet %>% count( {{groupingColumn}} ))                # Count how many different values there are in the grouping column
   uniqueSamples = unique(dataSet$wellName)                                      # Get a list of the unique samples
   
   
-  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                 # Make a column with a static name that has the grouping data
-  
+  # - Add group information columns to the data - 
+  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
   dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
   dataSet = dataSet %>% group_by({{groupingColumn}}) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
   
-  
+  # - Build a colorlist -
   colorsetNest = data.frame(colorListHub$red)                                   #This just makes a dataframe with the correct number of rows
-  
   for(i in 1:numberofGroups){                                                   #For each of the number of colors requested 
     colorsetNest[i] =  eval(parse( text = paste("colorListHub$", colorOrder[i], sep="")))                       #Set the color in that column of colorsetNest to be the color, found in ColorListHub, at that position in color order
     names(colorsetNest)[i] = colorOrder[i]                                      #match the column name to the colorset name
   }
   
   masterColorSet = NULL                                                         #Make an empty colorSets object
-  for(i in 1:length(uniqueSamples)){                                         #Do this for each sample   
+  for(i in 1:length(uniqueSamples)){                                            #Do this for each sample   
     currentGroupValue = dataSet$groupValue[i]                                   #Get the row's group value
-    currentColorSet = colorListHub[[currentGroupValue]]                         #Set the colorlist to the entry in colorOrder that is the group's value
+    currentColorSet = colorsetNest[[currentGroupValue]]                         #Set the colorlist to the entry in colorOrder that is the group's value
     
     currentGroupInstance = dataSet$groupInstance[i]
-    while(currentGroupInstance > length(currentColorSet)){                              #Make it so that if there are more values than the group size
-      currentGroupInstance = currentGroupInstance - length(currentColorSet)                     #remove one multiple of the group size until it is smaller
+    while(currentGroupInstance > length(currentColorSet)){                      #Make it so that if there are more values than the group size
+      currentGroupInstance = currentGroupInstance - length(currentColorSet)     #remove one multiple of the group size until it is smaller
     }                                                                           #This causes the colors to loop around if they go over the group size 
     
     currentColor = currentColorSet[[currentGroupInstance]]                      
-    
-   
     masterColorSet = append(masterColorSet, currentColor)
       
   }
+  names(masterColorSet) = uniqueSamples                                         #Connect the colors to the sample names 
+  
+  #print(colorOrder)
   #print(masterColorSet)
   
-  names(masterColorSet) = sort(uniqueSamples)                                   #Connect the colors to the sample names 
+  # - calculate averages - 
+  if(displayAverages){
+    
+    dataSet = dataSet %>% group_by(time, groupColumn) %>%  mutate(groupAverage = mean(value))
+    groupNames = unique(dataSet$groupColumn)
+    
+    for(i in 1:numberofGroups){
+      colorPosistion = grep(colorOrder[i], names(colorListHub))[1]              #Use the index to figure out which color we are working on
+      if(colorPosistion > length(colorListHub$boldColors)){                     #If we are using one of the background colors 
+        colorPosistion = colorPosistion - length(colorListHub$boldColors)       #get the correct position
+        
+        averageColor = colorListHub$boldColors[colorPosistion]
+        
+        masterColorSet = append(masterColorSet, averageColor)
+        names(masterColorSet)[length(masterColorSet)] = groupNames[i]
+      }
+    }
+  }
+  #print(masterColorSet)
+  
+  
+  # - plot the graph - 
   plot <- ggplot( aes(x=time, y=value, color=wellName), data = dataSet) 
   if(useLine){ plot = plot +geom_line()}else{plot = plot +geom_point()}
   plot <- plot + guides( color = guide_legend(title = "",) )
   plot = plot + scale_color_manual(values = masterColorSet)
   plot = plot + ylim(0,1) + ylab("Absorbance") +xlab("Time [s]") +theme_bw()
+  
+  if(displayAverages){
+    if(useLine){plot = plot + geom_line(aes(y = groupAverage, color = groupValue))
+    }else{ plot = plot + geom_point(aes(y = groupAverage, color = groupColumn))}
+  }
   
   if(!is.null(legendTitle)){
     plot = plot +  guides(color = guide_legend(title = legendTitle))
@@ -245,7 +242,7 @@ plotGrowth = function(groupingColumn, wells = NULL, dataSet = cleanData, colorOr
     }
     
     plot = plot + scale_color_manual(values = masterColorSet, 
-                                     breaks = sort(wells)[startOfEachGroup],
+                                     breaks = dataSet$wellName[startOfEachGroup],
                                      labels = labelSet
     ) 
   }

@@ -11,17 +11,29 @@ testFunction = function(wells, groupingColumn = NULL, numberofGroups = NULL, gro
   dataSet = dataSet %>% group_by(groupValue) %>% mutate(groupInstance = row_number())
   dataSet
 }
-testOut = testFunction(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
+testOut = testFunction(wells, groupingColumn = strain, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
+
+
+
+testOut2 = testOut[which(testOut$wellName %in% wellsSerMm),]
+testOut2 = testOut2 %>% group_by(time, groupColumn) %>%  mutate(groupAverage = mean(value))
+testOut2 = testOut2 %>% left_join(outAverages, by = "groupColumn") %>% select(-value) %>% distinct()
+
+
+groupColumn = strain
 combinedPlotColorLongFancy(wells, groupingColumn = column, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
 combinedPlotColorLongFancy(wells, groupingColumn = column, autoGroupLabel = T)
 combinedPlotColorLongFancy(wells, groupingColumn = strain, autoGroupLabel = T)
+
 
 testWells = wellNames
 wellsSerMm = wells[grepl("Ser", wells) & grepl("Mm", wells)]
 
 
 combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T)
+combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T, aver)
 
+plotGrowth(wellsSerMm, data= longData, groupingColumn = strain, autoGroupLabel = T, displayAverages = F, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundOrange", "backgroundCyan"))
 
 colorstart = which(testOut$groupValue == i)[1]
 
