@@ -33,7 +33,9 @@ wellsSerMm = wells[grepl("Ser", wells) & grepl("Mm", wells)]
 combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T)
 combinedPlotColorLongFancy(wellsSerMm, groupingColumn = strain, autoGroupLabel = T, aver)
 
-plotGrowth(wellsSerMm, data= longData, groupingColumn = strain, autoGroupLabel = T, displayAverages = F, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundOrange", "backgroundCyan"))
+plotGrowth(wellsSerMm, data= longData, groupingColumn = strain, autoGroupLabel = T, displayAverages = T, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundOrange", "backgroundCyan"))
+plotGrowth(wellsSerMm, data= longData, groupingColumn = strain, autoGroupLabel = T, displayAverages = T, colorOrder = c("backgroundRed", "backgroundBlue", "backgroundOrange", "backgroundCyan"))
+
 
 colorstart = which(testOut$groupValue == i)[1]
 
