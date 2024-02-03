@@ -33,6 +33,46 @@ currentColor = currentColorSet[[currentGroupInstance]]
 masterColorSet = append(masterColorSet, currentColor)
 
 
+wells = unique(longData$wellName)
+
+combinedPlotColorLong(wells, numberofGroups = 8, groupedNumber = 8, labelSet = c("A", "B", "C", "D", "E", "F", "G", "H"))
+combinedPlotColorLong(wells, numberofGroups = 8, groupedNumber = 8)
+
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# Old colorset Code
+# ---- Old Code ---- 
+colorset1 = c("brown1", "blue", "chocolate1", "deepskyblue")
+colorset2 = c("brown3", "blue3", "chocolate3", "deepskyblue3")
+colorset3 = c("brown4", "blue4", "chocolate4", "deepskyblue4")
+colorset4 = c("brown2", "blue2", "chocolate2", "deepskyblue2")
+
+colorset1 = c("brown1", "brown3", "brown4", "brown2")
+colorset2 = c("blue", "blue3", "blue4", "blue2")
+colorset3 = c("chocolate1", "chocolate3", "chocolate4", "chocolate2")
+colorset4 = c("deepskyblue", "deepskyblue3", "deepskyblue4", "deepskyblue2")
+colorset5 = c("hotpink", "hotpink1", "hotpink2", "hotpink3")
+
+colorsets = data.frame(colorset1, colorset2, colorset3, colorset4)
+colorset = unlist(colorsets[1:numOfPlates,])
+names(colorset) =NULL
+
+# Old colorset code 
+#colorsetNames = c("colorset1", "colorset2", "colorset3", "colorset4","colorset5","colorset6","colorset7")     #These are placeholder colorsetnames, they are used to reference the colorsets regardless of what colors they actually hold
+
+#colorsets = NULL
+#for(i in 1:groupRepeatNumber){
+#  rowSet = ((groupedNumber *(i-1))+1):(groupedNumber * i)
+#  colorsets = cbind(colorsets, colorset1[rowSet], colorset2[rowSet], colorset3[rowSet], colorset4[rowSet], colorset5[rowSet]) #This is not dynamic even thoguh is should be. This is an open flaw in this funciton. 
+#}
+#colorsets = data.frame(colorsets)
+#colorset = unlist(colorsets) 
+#for(i in 1:colorsetNumber){                                                   #For each of the number of colors requested 
+#  assign(colorsetNames[i], eval(parse( text = colorOrder[i])))                #Set the colorsset to the color found in colorOrder
+#}
+
+
 
 
 
