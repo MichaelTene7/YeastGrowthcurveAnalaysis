@@ -68,6 +68,8 @@ library(tidyr)
     growthCurverOutput = runGrowthCurverWithMetadata(shortData, colNamesSet)
     assign(growthCurverDataOut, growthCurverOutput, envir = .GlobalEnv)
     
+    
+    longData
   }
   
   # outputs: Data in short format (Wellnumber, data separated by _); long format 
