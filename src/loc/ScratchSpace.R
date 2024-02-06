@@ -223,6 +223,68 @@ growthDataCleaner(plateFilesMulti, inputKey)
 growthDataCleaner(plateFilesSingle, inputKey, instances = "a")
 
 longDataMulit = longData
+
+
+
+# ------------C ode from working on the dynamic ploitting function s
+
+if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
+  dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
+}
+
+# - Add group information columns to the data - 
+dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
+dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
+dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+
+
+useDynamicGroupColumn = function(dataSet, groupingColumn, wells){
+  if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
+    dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
+  }
+  
+  # - Add group information columns to the data - 
+  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
+  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
+  dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+  numberofGroups = nrow(dataSet %>% count(groupColumn))                         # Count how many different values there are in the grouping column
+  uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
+  
+}
+
+autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLabelVal = autoGroupLabel, legendTitleVal = legendTitle, numGroups = numberofGroups){
+  if(!is.null(legendTitleVal)){
+    plot = plot +  guides(color = guide_legend(title = legendTitleVal))
+  }
+  
+  if(!is.null(labelSetVal) | autoGroupLabelVal){
+    startOfEachGroup = NULL
+    for(i in 1:(numGroups)){
+      groupstart = which(data$groupValue == i)[1]
+      startOfEachGroup = append(startOfEachGroup, groupstart)
+    }
+    print(startOfEachGroup)
+    
+    if(autoGroupLabelVal){
+      labelSetVal = NULL
+      for(i in 1:numGroups){
+        labelSetVal[i] = data$groupColumn[startOfEachGroup[i]]
+      }
+    }
+    
+    plot = plot + scale_color_manual(values = masterColorSet, 
+                                     breaks = data$wellNumber[startOfEachGroup],
+                                     labels = labelSetVal
+    ) 
+  }
+  plot
+}
+
+
+
+
+
+
 #-------------------------------------------------------------------------------------------------------------------
 #Code from making the fancy long function 
 

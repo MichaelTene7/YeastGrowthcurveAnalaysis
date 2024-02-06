@@ -190,17 +190,19 @@ source("Src/Reu/colorLists.R")
 defaultColorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
 
 
-plotGrowth = function(groupingColumn, wells = NULL, dataSet = longData, autoGroupLabel = F, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub,
+plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, autoGroupLabel = F, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub,
                       colorOrder = defaultColorOrder){
+  
   
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
   }
-  
   # - Add group information columns to the data - 
   dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
   dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
   dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+  
+  
   numberofGroups = nrow(dataSet %>% count(groupColumn))                         # Count how many different values there are in the grouping column
   uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
   
@@ -218,47 +220,25 @@ plotGrowth = function(groupingColumn, wells = NULL, dataSet = longData, autoGrou
     }else{ plot = plot + geom_point(aes(y = groupAverage, color = groupColumn))}
   }
   
-  if(!is.null(legendTitle)){
-    plot = plot +  guides(color = guide_legend(title = legendTitle))
-  }
+  plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
   
-  if(!is.null(labelSet) | autoGroupLabel){
-    startOfEachGroup = NULL
-    for(i in 1:(numberofGroups)){
-      groupstart = which(dataSet$groupValue == i)[1]
-      startOfEachGroup = append(startOfEachGroup, groupstart)
-    }
-    print(startOfEachGroup)
-    
-    if(autoGroupLabel){
-      labelSet = NULL
-      for(i in 1:numberofGroups){
-        labelSet[i] = dataSet$groupColumn[startOfEachGroup[i]]
-      }
-    }
-    
-    plot = plot + scale_color_manual(values = masterColorSet, 
-                                     breaks = dataSet$wellNumber[startOfEachGroup],
-                                     labels = labelSet
-    ) 
-  }
   plot
 }
+
 
 
 
 buildColorList = function (groupingColumn, wells = NULL, dataSet = longData, autoGroupLabel = F, displayAverages = F, labelSet = NULL, colorListHub = colorListsHub, 
                            colorOrder = defaultColorOrder){
   
-  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
-  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
-  dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+  #dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
+  #dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
+  #dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
   
   # - Determine the number of groups and samples -
   numberofGroups = nrow(dataSet %>% count(groupColumn))                         # Count how many different values there are in the grouping column
   uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
-  
-  
+
   
   # - Build a colorlist -
   colorsetNest = data.frame(colorListHub$red)                                   #This just makes a dataframe with the correct number of rows
@@ -270,6 +250,7 @@ buildColorList = function (groupingColumn, wells = NULL, dataSet = longData, aut
   masterColorSet = NULL                                                         #Make an empty colorSets object
   for(i in 1:length(uniqueSamples)){                                            #Do this for each sample   
     currentGroupValue = dataSet$groupValue[i]                                   #Get the row's group value
+    
     currentColorSet = colorsetNest[[currentGroupValue]]                         #Set the colorlist to the entry in colorOrder that is the group's value
     
     currentGroupInstance = dataSet$groupInstance[i]
@@ -285,8 +266,6 @@ buildColorList = function (groupingColumn, wells = NULL, dataSet = longData, aut
   
   assign("masterColorSet", masterColorSet, envir = .GlobalEnv)
   
-  #print(colorOrder)
-  #print(masterColorSet)
   
   # - calculate averages - 
   if(displayAverages){
@@ -312,30 +291,66 @@ buildColorList = function (groupingColumn, wells = NULL, dataSet = longData, aut
 }
 
 
-growthKPlot = function(sorter, groupingColumn, wells = NULL, growthCurverData = growthCurverOutput, displayAverages = F, labelSet = NULL, colorListHub = colorListsHub, colorOrder = defaultColorOrder){
-  
-  #Arrange the data and make a colorset (code from plotGrowth)
+
+plotGrowthK = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = growthCurverOutput, autoGroupLabel = T, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub,
+                      colorOrder = defaultColorOrder){
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
   }
-  
   # - Add group information columns to the data - 
   dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
   dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
   dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+  
+  
   numberofGroups = nrow(dataSet %>% count(groupColumn))                         # Count how many different values there are in the grouping column
   uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
   
-  masterColorSet = buildColorList(groupingColumn, wells, growthCurverData, autoGroupLabel, displayAverages, labelSet, colorListHub, colorOrder)
-  # ------
+  masterColorSet = buildColorList({{groupingColumn}}, wells, dataSet, autoGroupLabel, displayAverages, labelSet, colorListHub, colorOrder)
   
-  kPlot = ggplot(growthCurverData, aes(x= {{sorter}}, y= k, colour=wellNumber))+
-    scale_color_manual(values = colorSet)+
+  # - plot the graph - 
+  plot = ggplot(dataSet, aes(x= {{xAxisColumn}}, y= k, colour=wellNumber))+
+    scale_color_manual(values = masterColorSet)+
     ylim(0, 1)+
     ylab("Carrying Capacity [K]")+
     geom_jitter(width = 0.1, size = 3)+
     theme_bw()+
     theme(axis.title.x = element_blank())+
     theme(axis.text.x = element_text(size=12))
-  kPlot
+  
+  plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
+  
+  plot
 }
+
+plotGrowthR = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = growthCurverOutput, autoGroupLabel = T, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub,
+                       colorOrder = defaultColorOrder){
+  if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
+    dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
+  }
+  # - Add group information columns to the data - 
+  dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
+  dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
+  dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+  
+  
+  numberofGroups = nrow(dataSet %>% count(groupColumn))                         # Count how many different values there are in the grouping column
+  uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
+  
+  masterColorSet = buildColorList({{groupingColumn}}, wells, dataSet, autoGroupLabel, displayAverages, labelSet, colorListHub, colorOrder)
+  
+  # - plot the graph - 
+  plot = ggplot(dataSet, aes(x= {{xAxisColumn}}, y= r, colour=wellNumber))+
+    scale_color_manual(values = masterColorSet)+
+    ylab("Growth Rate [r]")+
+    geom_jitter(width = 0.1, size = 3)+
+    theme_bw()+
+    theme(axis.title.x = element_blank())+
+    theme(axis.text.x = element_text(size=12))
+  
+  plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
+  
+  plot
+}
+
+
