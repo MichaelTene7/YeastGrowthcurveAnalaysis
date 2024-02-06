@@ -7,7 +7,7 @@ library(tidyr)
 # -------- Data cleaning Functions -------
 
 {
-  #Param addTime is most deprecated due to new handling of muliptle plate files
+  #Param addTime is most deprecated due to new handling of multiple plate files
   growthDataCleaner = function(plateFiles, keyFile, addTime = T, instances = NULL, longDataOut = "longData", shortDataOut = "shortData", growthCurverDataOut = "growthCurverOutput"){
     # -- Step 0 prepare to process multiple input files
     if(is.null(instances) & length(plateFiles) ==1 ){
