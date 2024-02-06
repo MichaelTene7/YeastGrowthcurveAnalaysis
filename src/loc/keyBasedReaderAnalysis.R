@@ -4,9 +4,6 @@ library(growthcurver)
 library(dplyr)
 library(tidyr)
 
-# finish code, set up plot, set up demo of normal and merging, set up demo of growthcruver plots
-# make sure to check the payments on wellsfargo 
-
 # -------- Data cleaning Functions -------
 
 {
