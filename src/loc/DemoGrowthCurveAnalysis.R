@@ -55,9 +55,9 @@ growthCurvePlot
 
 # -- Growthcurver values --
 
-kPlot = plotGrowthK(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells)
+kPlot = plotGrowthK(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
 kPlot
-rPlot = plotGrowthR(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells)
+rPlot = plotGrowthR(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
 rPlot 
 
 
