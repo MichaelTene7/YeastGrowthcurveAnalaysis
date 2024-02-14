@@ -352,4 +352,30 @@ plotGrowthR = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = gr
   plot
 }
 
-
+autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLabelVal = autoGroupLabel, legendTitleVal = legendTitle, numGroups = numberofGroups){
+  if(!is.null(legendTitleVal)){
+    plot = plot +  guides(color = guide_legend(title = legendTitleVal))
+  }
+  
+  if(!is.null(labelSetVal) | autoGroupLabelVal){
+    startOfEachGroup = NULL
+    for(i in 1:(numGroups)){
+      groupstart = which(data$groupValue == i)[1]
+      startOfEachGroup = append(startOfEachGroup, groupstart)
+    }
+    print(startOfEachGroup)
+    
+    if(autoGroupLabelVal){
+      labelSetVal = NULL
+      for(i in 1:numGroups){
+        labelSetVal[i] = data$groupColumn[startOfEachGroup[i]]
+      }
+    }
+    
+    plot = plot + scale_color_manual(values = masterColorSet, 
+                                     breaks = data$wellNumber[startOfEachGroup],
+                                     labels = labelSetVal
+    ) 
+  }
+  plot
+}
