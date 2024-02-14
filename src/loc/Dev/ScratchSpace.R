@@ -1,3 +1,5 @@
+plateFiles = c("Data/Demo/demoFile1.csv")
+
 # ----- Making a script to decode from a key csv 
 inputData = inData3
 
