@@ -196,6 +196,7 @@ plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, aut
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
     dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
   }
+
   # - Add group information columns to the data - 
   dataSet = dataSet %>% mutate(groupColumn = {{groupingColumn}})                # Make a column with a static name that has the grouping data
   dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
@@ -206,6 +207,7 @@ plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, aut
   uniqueSamples = unique(dataSet$wellNumber)                                    # Get a list of the unique samples
   
   masterColorSet = buildColorList({{groupingColumn}}, wells, dataSet, autoGroupLabel, displayAverages, labelSet, colorListHub, colorOrder)
+  if(displayAverages){dataSet = dataSet %>% group_by(time, groupColumn) %>%  mutate(groupAverage = mean(value))}
   
   # - plot the graph - 
   plot <- ggplot( aes(x=time, y=value, color=wellNumber), data = dataSet) 
@@ -215,11 +217,12 @@ plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, aut
   plot = plot + ylim(0,1) + ylab("Absorbance") +xlab("Time [s]") +theme_bw()
   
   if(displayAverages){
-    if(useLine){plot = plot + geom_line(aes(y = groupAverage, color = groupValue))
+    if(useLine){plot = plot + geom_line(aes(y = groupAverage, color = groupColumn), linewidth=1.5)
     }else{ plot = plot + geom_point(aes(y = groupAverage, color = groupColumn))}
   }
   
-  plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
+  message(names(masterColorSet))
+  plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups, displayAverages = displayAverages, colorSet = masterColorSet)
   
   plot
 }
@@ -272,8 +275,9 @@ buildColorList = function (groupingColumn, wells = NULL, dataSet = longData, aut
     dataSet = dataSet %>% group_by(time, groupColumn) %>%  mutate(groupAverage = mean(value))
     groupNames = unique(dataSet$groupColumn)
     
-    for(i in 1:numberofGroups){
-      colorPosistion = grep(colorOrder[i], names(colorListHub))[1]              #Use the index to figure out which color we are working on
+    for(i in 1:length(unique(dataSet$groupValue))){
+      j = unique(dataSet$groupValue)[i]                                          #this makes sure the bold colors appear in the correct order 
+      colorPosistion = grep(colorOrder[j], names(colorListHub))[1]              #Use the index to figure out which color we are working on
       if(colorPosistion > length(colorListHub$boldColors)){                     #If we are using one of the background colors 
         colorPosistion = colorPosistion - length(colorListHub$boldColors)       #get the correct position
         
@@ -352,7 +356,7 @@ plotGrowthR = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = gr
   plot
 }
 
-autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLabelVal = autoGroupLabel, legendTitleVal = legendTitle, numGroups = numberofGroups){
+autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLabelVal = autoGroupLabel, legendTitleVal = legendTitle, numGroups = numberofGroups, displayAverages = F, colorSet = masterColorSet){
   if(!is.null(legendTitleVal)){
     plot = plot +  guides(color = guide_legend(title = legendTitleVal))
   }
@@ -372,10 +376,20 @@ autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLab
       }
     }
     
-    plot = plot + scale_color_manual(values = masterColorSet, 
-                                     breaks = data$wellNumber[startOfEachGroup],
-                                     labels = labelSetVal
-    ) 
+    breakSet = data$wellNumber[startOfEachGroup]
+    if(displayAverages){
+      wellAndGroupnames = names(colorSet)
+      message(wellAndGroupnames)
+      groupNames = wellAndGroupnames[!wellAndGroupnames %in% dataSet$wellNumber]
+      message(groupNames)
+      breakSet = append(breakSet, groupNames)
+      groupNamesAvg = lapply(groupNames, paste, "Average")
+      labelSetVal = append(labelSetVal, groupNamesAvg)
+    }
+    
+    plot = plot + scale_color_manual(values = colorSet, 
+                                     breaks = breakSet,
+                                     labels = labelSetVal) 
   }
   plot
 }
