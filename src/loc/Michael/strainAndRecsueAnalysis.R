@@ -8,8 +8,13 @@
 #  ### EDIT THIS SECTION ###
 
 # If your plates use the same well key, you can include them together, as shown here
-plateFiles = c("Data/Demo/demoFile1.csv", "Data/Demo/demoFile2.csv", "Data/Demo/demoFile3.csv")
-keyFile = ("Data/Demo/demoKey.csv")
+plateFiles = c("Data/Michael/10-12-strainPhenotyping.csv", "Data/Michael/10-13-strainPhenotyping.csv", "Data/Michael/10-19-strainPhenotyping-notOvernight.csv")
+keyFile = ("Data/Michael/strainPhenotypingKey.csv")
+filePrefix = "strainsPhenotyping"
+
+plateFiles = c("Data/11-2-completemetation.csv")
+keyFile = ("Data/Michael/ComplimentationKey.csv")
+filePrefix = "Complimentation"
 
 #Use this is you have plate files with different keys; see lower in the code
 plateFiles2 = c("Data/Demo/demoFileType2.csv")
@@ -20,13 +25,18 @@ keyFile2 = c("Data/Demo/demoKey2.csv")
 plateInstances = c("a", "b", "c")
 
 #edit this to change which colorsets the groups use
-scriptColorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
+scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
 
 #Edit this to change the prefix the files are saved with
-filePrefix = "Demo"
 
 
 
+keydata = read.csv(keyFile)
+#keydata = keydata %>% unite("MediaMutation", c(Media,Mutant), remove = F, sep="-")
+#write.csv(keydata, keyFile)
+keydata = keydata %>% unite("MutationPlasmid", c(Mutant,Plasmid), remove = F, sep="-")
+
+#write.csv(keydata, keyFile)
 
 
 # --- MAIN DATA OUTPUT ---
@@ -38,35 +48,35 @@ growthDataCleaner(plateFiles, keyFile, instances = plateInstances)
 
 # - pick wells to plot - 
 plottedWells = longData$wellNumber[
-  longData$DemoPlotColumn == "yes"   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
-  ]                                 
+  longData$Media %in% c( "Ser")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
+]   
+
 plottedWells = longData$wellNumber   # Run this code if you want all wells to be plotted instead
 # - 
 
 growthCurvePlot = plotGrowthCurve(
-          groupingColumn = row,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
-                                     # Choosing "wellNumber" means each well is in a unique group. Up to 12 groups supported.
-           wells = plottedWells,      
-           autoGroupLabel = T,       # This determines if the key should only have one entry per group (T), or one entry per well (F) 
-           displayAverages = F,      # This determines if an average of all of the samples in the group should be plotted
-           colorOrder = scriptColorOrder
-           )
+  groupingColumn = MediaMutation,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
+  # Choosing "wellNumber" means each well is in a unique group. Up to 12 groups supported.
+  wells = plottedWells,      
+  autoGroupLabel = T,       # This determines if the key should only have one entry per group (T), or one entry per well (F) 
+  displayAverages = T,      # This determines if an average of all of the samples in the group should be plotted
+  useLine = T,
+  colorOrder = scriptColorOrder
+)
 growthCurvePlot
 
 # -- Growthcurver values --
 
-kPlot = plotGrowthK(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
+plottedWells = longData$wellNumber[
+  longData$Media %in% c( "Ser", "As")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
+] 
+
+kPlot = plotGrowthK(xAxisColumn = MediaMutation, groupingColumn = Mutant, wells = plottedWells, colorOrder = scriptColorOrder)
 kPlot
-rPlot = plotGrowthR(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
+rPlot = plotGrowthR(xAxisColumn = MediaMutation, groupingColumn = Mutant, wells = plottedWells, colorOrder = scriptColorOrder)
 rPlot 
 
-# -- combination plot --
-library(cowplot)
-krPlot = plot_grid(kPlot + theme(legend.position = "none"), rPlot, labels = c("B", "C"), ncol =2, rel_widths = c(3,4))
 
-
-allPlot = plot_grid(growthCurvePlot, krPlot, labels = c("A", ""), nrow =2)
-allPlot
 
 
 # -- saving to files --
@@ -96,6 +106,8 @@ dev.off()
 
 
 ## ------------ DEMO FOR IF MULITPLE KEYS ARE REQUIRED -------------------- ##
+
+
 
 longData1 = growthDataCleaner(plateFiles, keyFile, instances = plateInstances)
 

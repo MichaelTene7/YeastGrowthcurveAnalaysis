@@ -1,3 +1,20 @@
+dataSet = longData
+dataSet = dataSet[which(dataSet$wellNumber %in% plottedWells),]
+
+
+dataSet = dataSet %>% mutate(groupColumn = MediaMutation)                # Make a column with a static name that has the grouping data
+dataSet = dataSet %>% mutate(groupValue = as.numeric(as.factor(groupColumn))) # Make a column with the row's group number                
+dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_number()) # Make a column that show what instance of its group the row is 
+
+
+
+
+
+
+
+
+
+
 # ----- Making a script to decode from a key csv 
 inputData = inData3
 

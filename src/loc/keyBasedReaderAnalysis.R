@@ -380,7 +380,7 @@ autoLegend = function(plot, data = dataSet, labelSetVal = labelSet, autoGroupLab
     if(displayAverages){
       wellAndGroupnames = names(colorSet)
       message(wellAndGroupnames)
-      groupNames = wellAndGroupnames[!wellAndGroupnames %in% dataSet$wellNumber]
+      groupNames = wellAndGroupnames[!wellAndGroupnames %in% data$wellNumber]
       message(groupNames)
       breakSet = append(breakSet, groupNames)
       groupNamesAvg = lapply(groupNames, paste, "Average")
