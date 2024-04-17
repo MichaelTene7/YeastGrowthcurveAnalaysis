@@ -44,9 +44,11 @@ library(tidyr)
     }else{
       meanData = meanExtractor(plateData, addTime = addTime, instance = instances[1])
     }
+    message("Completed meandata extraction")
     
     # --- Step 2 create long data using the key ---
-    longData = meanToLongData(meanData, keyData, instanced = instanced)
+    longData = meanToLongData(meanData, keyData, instanced = instanced, instanceValues = instances)
+    message("Completed longdata conversion")
     
     assign(longDataOut, value = longData, envir = .GlobalEnv)
     
@@ -57,12 +59,14 @@ library(tidyr)
     
     # --- Step 3 make a short version of the data --- 
     shortData = longToShortData(longData)
+    message("Completed shortData conversion")
     
     assign(shortDataOut, shortData, envir = .GlobalEnv)
     
     # --- Step 4 run growthCurver ---
     
     growthCurverOutput = runGrowthCurverWithMetadata(shortData, colNamesSet)
+    message("Completed growthcurver analysis")
     assign(growthCurverDataOut, growthCurverOutput, envir = .GlobalEnv)
     
     
@@ -90,7 +94,8 @@ library(tidyr)
     meanData = mainData[which(mainData[1] == "Mean"),]                            #The data in in the row titled mean 
     rownames(meanData) = mainData[(which(mainData[1] == "Mean")-3),1]             #The well name of the data is always stored three rows above the mean data 
     meanData = meanData[,-1]                                                      #Remove the row with the 'mean' label as text 
-    rownames(meanData) = sapply(rownames(meanData) , paste, instance, sep="")     #If there is an Instance marker added (to give different plates different row names), add it to the row name
+    reorderedPaste = function(x) paste(instance, x, sep="")
+    rownames(meanData) = sapply(rownames(meanData), reorderedPaste)     #If there is an Instance marker added (to give different plates different row names), add it to the row name
     
     if(addTime){                                                                  #If adding a time row, add the row
       cleanData = rbind(timeData, meanData)
@@ -104,7 +109,7 @@ library(tidyr)
     cleanData                                                                     #Return the cleaned data 
   }
   
-  meanToLongData = function(meanData, keyData, instanced = F){
+  meanToLongData = function(meanData, keyData, instanced = F, instanceValues = instances){
     
     # -- convert the data to long format --
     longData = pivot_longer(meanData, 2:ncol(meanData))
@@ -118,7 +123,7 @@ library(tidyr)
       colnames(longData)[currentCol] = names(keyData[i])
       
       for(j in 1:nrow(longData[currentCol])){
-        keyRow = match(substr(longData$wellNumber[j], 1, 2), keyData$Well)
+        keyRow = match(substr(longData$wellNumber[j], 2, 4), keyData$Well)
         
         longData[j, currentCol] = keyData[keyRow, i]
       }
@@ -129,9 +134,10 @@ library(tidyr)
     # - add rows and columns to the long data - 
     longData$wellNumber2 = longData$wellNumber
     if(instanced == F){
-      longData = separate_wider_position(longData, wellNumber2, c(row = 1, column = 1))
+      longData = separate_wider_position(longData, wellNumber2, c(row = 1, column = 2), too_few = "align_start")
     }else{
-      longData = separate_wider_position(longData, wellNumber2, c(row = 1, column = 1, instance = max(nchar(longData$wellNumber2))-2))
+      instanceLength = (max(nchar(instanceValues)))
+      longData = separate_wider_position(longData, wellNumber2, c(instance = instanceLength, row = 1, column = 2), too_few = "align_start")
       longData = relocate(longData, instance, .after = wellNumber)
     }
     
@@ -321,6 +327,7 @@ plotGrowthK = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = gr
     theme(axis.title.x = element_blank())+
     theme(axis.text.x = element_text(size=12))
   
+  plot = plot + guides( color = guide_legend(title = "",) )
   plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
   
   plot
@@ -351,6 +358,7 @@ plotGrowthR = function(xAxisColumn, groupingColumn,  wells = NULL,  dataSet = gr
     theme(axis.title.x = element_blank())+
     theme(axis.text.x = element_text(size=12))
   
+  plot = plot + guides( color = guide_legend(title = "",) )
   plot = autoLegend(plot, data = dataSet, autoGroupLabelVal = autoGroupLabel, labelSetVal = labelSet, legendTitleVal = legendTitle, numGroups = numberofGroups)
   
   plot

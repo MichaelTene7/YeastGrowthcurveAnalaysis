@@ -1,3 +1,4 @@
+
 dataSet = longData
 dataSet = dataSet[which(dataSet$wellNumber %in% plottedWells),]
 
@@ -13,6 +14,9 @@ dataSet = dataSet %>% group_by(groupColumn) %>% mutate(groupInstance = row_numbe
 
 
 
+
+
+plateFiles = c("Data/Demo/demoFile1.csv")
 
 
 # ----- Making a script to decode from a key csv 

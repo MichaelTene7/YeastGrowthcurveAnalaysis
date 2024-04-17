@@ -39,6 +39,11 @@ convertBoth = function(wellNumbers, rowFirst = F, rowMeaning = rowMeanings, colM
 
 
 # --- get the means out of the data file ---
+
+
+
+
+
 dataCleaner = function(mainData, instance = NULL, addTime = T, rowFirst = rowsFirst ){
   # -- clean the data -- #
   
@@ -151,11 +156,11 @@ combinedPlotLong = function(wells = NULL, dataSet = .GlobalEnv$cleanData){
 plotGrowth = function(groupingColumn, wells = NULL, dataSet = cleanData, colorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen"), autoGroupLabel = F, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub){
   
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
-    dataSet = dataSet[which(dataSet$wellName %in% wells),]
+    dataSet = dataSet[which(dataSet$wellNumber %in% wells),]
   }
   
   numberofGroups = nrow(dataSet %>% count( {{groupingColumn}} ))                # Count how many different values there are in the grouping column
-  uniqueSamples = unique(dataSet$wellName)                                      # Get a list of the unique samples
+  uniqueSamples = unique(dataSet$wellNumber)                                      # Get a list of the unique samples
   
   
   # - Add group information columns to the data - 
