@@ -94,6 +94,10 @@ png(paste(outputFolderName, filePrefix, "Rplot.png"))
 rPlot
 dev.off()
 
+png(paste(outputFolderName, filePrefix, "Combinationplot.png"))
+allPlot
+dev.off()
+
 
 ## ------------ DEMO FOR IF MULITPLE KEYS ARE REQUIRED -------------------- ##
 
