@@ -126,12 +126,36 @@ growthCurvePlot
 
 # -- Growthcurver values --
 
-kPlot = plotGrowthK(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
+
+newShortData = longToShortData(longData)
+growthCurverOutput = SummarizeGrowthByPlate(newShortData)
+growthCurverOutput$fullWellCode = growthCurverOutput$sample
+growthCurverOutput$fullWellCode2 = growthCurverOutput$sample
+colNames = names(longData[3:(length((names(longData)))-4)])
+colNames = append(colNames, c("Phenotype", "wellName"))
+growthCurverOutput = growthCurverOutput %>% separate_wider_delim(fullWellCode2, "_", names = colNames)
+
+if("instance" %in% names(growthCurverOutput)){
+  growthCurverOutput$sample = paste(growthCurverOutput$wellNumber)
+}else{
+  growthCurverOutput$sample = growthCurverOutput$wellNumber
+}
+
+par(mfrow = c(1,2))
+
+library(gridExtra)
+library(cowplot)
+
+kPlot = plotGrowthK(xAxisColumn = Concentration, groupingColumn = Phenotype, wells = plottedWells, colorOrder = scriptColorOrder, legendTitle = "Phenotype")
 kPlot
-rPlot = plotGrowthR(xAxisColumn = Media, groupingColumn = Strain, wells = plottedWells, colorOrder = scriptColorOrder)
+rPlot = plotGrowthR(xAxisColumn = Concentration, groupingColumn = Phenotype, wells = plottedWells, colorOrder = scriptColorOrder, legendTitle = "Phenotype")
 rPlot 
 
+krPlot = plot_grid(kPlot + theme(legend.position = "none"), rPlot, labels = c("B", "C"), ncol =2, rel_widths = c(3,4))
+krPlot
 
+allPlot = plot_grid(growthCurvePlot, krPlot, labels = c("A", ""), nrow =2)
+allPlot
 
 
 # -- saving to files --
@@ -157,6 +181,10 @@ dev.off()
 
 png(paste(outputFolderName, filePrefix, "Rplot.png"))
 rPlot
+dev.off()
+
+png(paste(outputFolderName, filePrefix, "Combinationplot.png"))
+allPlot
 dev.off()
 
 
