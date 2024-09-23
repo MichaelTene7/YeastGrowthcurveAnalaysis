@@ -8,23 +8,16 @@
 #  ### EDIT THIS SECTION ###
 
 # If your plates use the same well key, you can include them together, as shown here
-plateFiles = c("Data/Michael/10-12-strainPhenotyping.csv", "Data/Michael/10-13-strainPhenotyping.csv", "Data/Michael/10-19-strainPhenotyping-notOvernight.csv")
-keyFile = ("Data/Michael/strainPhenotypingKey.csv")
-filePrefix = "strainsPhenotyping"
+plateFiles = c("Data/michael/2-13-24-Complementation.csv")
+keyFile = ("Data/michael/CompletementationNewKey.csv")
 
-plateFiles = c("Data/11-2-completemetation.csv")
-keyFile = ("Data/Michael/ComplimentationKey.csv")
-filePrefix = "Complimentation"
+keyData = read.csv(keyFile)
+keyData = keyData %>% unite("StrainPlasmid", c(Strain, Plasmid), remove = F, sep="")
+keyData = keyData %>% unite("MutantPlasmid", c(Mutant, Plasmid), remove = F, sep="")
+keyData = keyData %>% unite("MutantMedia", c(Mutant, Media), remove = F, sep="")
+keyData = keyData %>% unite("PlasmidMedia", c(Plasmid, Media), remove = F, sep="")
 
-plateFiles = c("Data/Michael/YeastComplimentation5-23.csv")
-keyFile = ("Data/Michael/ComplementationRound2Key3.csv")
-filePrefix = "ReComplimentation"
-
-plateFiles = c("Data/Michael/5-30UndergradComplimentation.csv")
-keyFile = ("Data/Michael/ComplementationRound2Key3.csv")
-filePrefix = "UndergradComplimentation"
-
-
+keyData = write.csv(keyData, keyFile)
 
 #Use this is you have plate files with different keys; see lower in the code
 plateFiles2 = c("Data/Demo/demoFileType2.csv")
@@ -33,24 +26,15 @@ keyFile2 = c("Data/Demo/demoKey2.csv")
 
 #Edit these to give each plate a unique identifier
 plateInstances = c("a", "b", "c")
-plateInstances = c("a")
 
 #edit this to change which colorsets the groups use
-scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
-
-scriptColorOrder = c("backgroundCyan", "backgroundBlue", "backgroundRed", "backgroundGreen", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
-
+scriptColorOrder = c("blue", "red", "cyan", "orange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
 
 #Edit this to change the prefix the files are saved with
+filePrefix = "NewComplimentation"
 
 
 
-keydata = read.csv(keyFile)
-#keydata = keydata %>% unite("MediaMutation", c(Media,Mutant), remove = F, sep="-")
-#write.csv(keydata, keyFile)
-keydata = keydata %>% unite("MutationPlasmid", c(Mutant,Plasmid), remove = F, sep="-")
-
-#write.csv(keydata, keyFile)
 
 
 # --- MAIN DATA OUTPUT ---
@@ -62,32 +46,26 @@ growthDataCleaner(plateFiles, keyFile, instances = plateInstances)
 
 # - pick wells to plot - 
 plottedWells = longData$wellNumber[
-  longData$Media %in% c( "Glu")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
-]   
-
+  longData$Mutant == "Deletion"   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
+]                                 
 plottedWells = longData$wellNumber   # Run this code if you want all wells to be plotted instead
 # - 
 
 growthCurvePlot = plotGrowthCurve(
-  groupingColumn = MutationPlasmid,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
+  groupingColumn = PlasmidMedia,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
   # Choosing "wellNumber" means each well is in a unique group. Up to 12 groups supported.
   wells = plottedWells,      
   autoGroupLabel = T,       # This determines if the key should only have one entry per group (T), or one entry per well (F) 
   displayAverages = F,      # This determines if an average of all of the samples in the group should be plotted
-  useLine = T,
   colorOrder = scriptColorOrder
 )
 growthCurvePlot
 
 #-- Growthcurver values --
 
-plottedWells = longData$wellNumber[
-  longData$Media %in% c( "Ser", "Glu")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
-] 
-
-kPlot = plotGrowthK(xAxisColumn = Media, groupingColumn = MutationPlasmid, wells = plottedWells, colorOrder = scriptColorOrder)
+kPlot = plotGrowthK(xAxisColumn = MutantPlasmid, groupingColumn = Media, wells = plottedWells, colorOrder = scriptColorOrder)
 kPlot
-rPlot = plotGrowthR(xAxisColumn = Media, groupingColumn = MutationPlasmid, wells = plottedWells, colorOrder = scriptColorOrder)
+rPlot = plotGrowthR(xAxisColumn = MutantPlasmid, groupingColumn = Media, wells = plottedWells, colorOrder = scriptColorOrder)
 rPlot 
 
 
@@ -120,8 +98,6 @@ dev.off()
 
 
 ## ------------ DEMO FOR IF MULITPLE KEYS ARE REQUIRED -------------------- ##
-
-
 
 longData1 = growthDataCleaner(plateFiles, keyFile, instances = plateInstances)
 

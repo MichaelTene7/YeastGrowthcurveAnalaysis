@@ -8,7 +8,7 @@
 #  ### EDIT THIS SECTION ###
 
 # If your plates use the same well key, you can include them together, as shown here
-plateFiles = c("Data/Michael/PalsmidPhenotyping.csv")
+plateFiles = c("Data/Michael/PlasmidPhenotyping.csv")
 keyFile = ("Data/Michael/plasmidPhenotypingKey.csv")
 filePrefix = "plasmidPhenotyping"
 
@@ -22,7 +22,7 @@ keyFile2 = c("Data/Demo/demoKey2.csv")
 plateInstances = c("a")
 
 #edit this to change which colorsets the groups use
-scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
+scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen", "red", "blue")
 
 #Edit this to change the prefix the files are saved with
 
@@ -50,7 +50,7 @@ plottedWells = longData$wellNumber   # Run this code if you want all wells to be
 # - 
 
 growthCurvePlot = plotGrowthCurve(
-  groupingColumn = MediaStrain,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
+  groupingColumn = Media,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
   # Choosing "wellNumber" means each well is in a unique group. Up to 12 groups supported.
   wells = plottedWells,      
   autoGroupLabel = T,       # This determines if the key should only have one entry per group (T), or one entry per well (F) 
