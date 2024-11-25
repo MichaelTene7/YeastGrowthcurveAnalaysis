@@ -192,11 +192,11 @@ library(tidyr)
 # ------ Plotting functions -------
 
 source("Src/Reu/colorLists.R")
-defaultColorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
+defaultColorOrder = c("red", "blue", "orange", "cyan", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen", "backgroundRed", "backgroundBlue")
 
 
 plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, autoGroupLabel = F, useLine = F, displayAverages = F, labelSet = NULL, legendTitle = NULL, colorListHub = colorListsHub,
-                      colorOrder = defaultColorOrder){
+                      colorOrder = defaultColorOrder, title = NULL){
   
   
   if(!is.null(wells)){                                                          #If wells isn't empty, limit the dataset to the specified wells
@@ -221,6 +221,9 @@ plotGrowthCurve = function(groupingColumn, wells = NULL, dataSet = longData, aut
   plot <- plot + guides( color = guide_legend(title = "",) )
   plot = plot + scale_color_manual(values = masterColorSet)
   plot = plot + ylim(0,1) + ylab("Absorbance") +xlab("Time [s]") +theme_bw()
+  if(!is.null(title)){
+    plot = plot+ ggtitle(title)
+  }
   
   if(displayAverages){
     if(useLine){plot = plot + geom_line(aes(y = groupAverage, color = groupColumn), linewidth=1.5)

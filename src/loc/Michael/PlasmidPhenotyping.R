@@ -9,8 +9,13 @@
 
 # If your plates use the same well key, you can include them together, as shown here
 plateFiles = c("Data/Michael/PalsmidPhenotyping.csv")
+plateFiles = c("Data/Michael/11-20-phen.csv")
+
 keyFile = ("Data/Michael/plasmidPhenotypingKey.csv")
+keyFile = ("Data/Michael/comparisionKey.csv")
+
 filePrefix = "plasmidPhenotyping"
+filePrefix = "comparisionPhenotyping"
 
 
 #Use this is you have plate files with different keys; see lower in the code
@@ -22,13 +27,15 @@ keyFile2 = c("Data/Demo/demoKey2.csv")
 plateInstances = c("a")
 
 #edit this to change which colorsets the groups use
-scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen")
+scriptColorOrder = c("blue", "cyan", "red", "orange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen", "red", "blue")
+
+scriptColorOrder = c("blue", "green", "cyan", "lightblue", "purple", "brightgreen", "red", "tan", "orange", "pink",  "lightred", "yellow", "red", "blue")
 
 #Edit this to change the prefix the files are saved with
 
 
-
 keydata = read.csv(keyFile)
+#keydata$MediaStrain = paste(keydata$Media, keydata$Strain, sep="-")
 #write.csv(keydata, keyFile)
 
 #write.csv(keydata, keyFile)
@@ -43,20 +50,21 @@ growthDataCleaner(plateFiles, keyFile, instances = plateInstances)
 
 # - pick wells to plot - 
 plottedWells = longData$wellNumber[
-  longData$Media %in% c( "Ser", "As")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
+  longData$Media %in% c("Glu")   # CHANGE THIS to longData$YourDesiredFilterColumn == "valueMeansYesToPlot"
 ]   
 
 plottedWells = longData$wellNumber   # Run this code if you want all wells to be plotted instead
 # - 
 
 growthCurvePlot = plotGrowthCurve(
-  groupingColumn = MediaStrain,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
+  groupingColumn = Strain,      # This determines the COLUMN WELLS ARE GROUPED with. Groups share similar colors.
   # Choosing "wellNumber" means each well is in a unique group. Up to 12 groups supported.
   wells = plottedWells,      
   autoGroupLabel = T,       # This determines if the key should only have one entry per group (T), or one entry per well (F) 
   displayAverages = F,      # This determines if an average of all of the samples in the group should be plotted
   useLine = T,
-  colorOrder = scriptColorOrder
+  colorOrder = scriptColorOrder, 
+  title = "Glutamine"
 )
 growthCurvePlot
 
