@@ -9,7 +9,11 @@
 
 # If your plates use the same well key, you can include them together, as shown here
 plateFiles = c("Data/Michael/PalsmidPhenotyping.csv")
+plateFiles = c("Data/Michael/PlasmidPhenotyping.csv")
 plateFiles = c("Data/Michael/11-20-phen.csv")
+
+
+
 
 keyFile = ("Data/Michael/plasmidPhenotypingKey.csv")
 keyFile = ("Data/Michael/comparisionKey.csv")
@@ -27,9 +31,13 @@ keyFile2 = c("Data/Demo/demoKey2.csv")
 plateInstances = c("a")
 
 #edit this to change which colorsets the groups use
+
 scriptColorOrder = c("blue", "cyan", "red", "orange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen", "red", "blue")
 
 scriptColorOrder = c("blue", "green", "cyan", "lightblue", "purple", "brightgreen", "red", "tan", "orange", "pink",  "lightred", "yellow", "red", "blue")
+
+scriptColorOrder = c("backgroundBlue", "backgroundRed", "backgroundCyan", "backgroundOrange", "pink", "green", "purple", "yellow", "tan", "lightblue", "lightred", "brightgreen", "red", "blue")
+
 
 #Edit this to change the prefix the files are saved with
 
